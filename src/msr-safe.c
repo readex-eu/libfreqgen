@@ -1,6 +1,8 @@
 /*
  * msr-safe.c
  *
+ * This implements access to /dev/cpu/(nr)/msr[-safe]
+ *
  *  Created on: 26.01.2018
  *      Author: rschoene
  */
@@ -17,7 +19,7 @@
 
 #include "freq_gen_internal.h"
 
-
+/* some definitions to parse cpuid */
 #define STEPPING(eax) (eax & 0xF)
 #define MODEL(eax) ((eax >> 4) & 0xF)
 #define FAMILY(eax) ((eax >> 8) & 0xF)
@@ -25,13 +27,16 @@
 #define EXT_MODEL(eax) ((eax >> 16) & 0xF)
 #define EXT_FAMILY(eax) ((eax >> 20) & 0xFF)
 
+/* used registers for core/uncore frequency toggling */
 #define IA32_PERF_CTL 0x199
 #define UNCORE_RATIO_LIMIT 0x620
 
+/* implementations of the interface */
 static freq_gen_interface_t freq_gen_msr_cpu_interface;
 static freq_gen_interface_t freq_gen_msr_uncore_interface;
 
 
+/* cpuid call in C */
 static inline void cpuid(unsigned int *eax, unsigned int *ebx,
                          unsigned int *ecx, unsigned int *edx)
 {
@@ -41,11 +46,16 @@ static inline void cpuid(unsigned int *eax, unsigned int *ebx,
             : "0" (*eax), "2" (*ecx));
 }
 
+/* check whether frequency scaling for the current CPU is supported
+ * returns 0 if not or 1 if so
+ */
 static int is_supported()
 {
 	char buffer[13];
 	unsigned int eax = 0, ebx=0, ecx=0, edx=0;
 	cpuid(&eax,&ebx,&ecx,&edx);
+
+	/* reorder name string */
 	buffer[0]=ebx & 0xFF;
 	buffer[1]=(ebx>>8) & 0xFF;
 	buffer[2]=(ebx>>16) & 0xFF;
@@ -59,6 +69,7 @@ static int is_supported()
 	buffer[10]=(ecx>>16) & 0xFF;
 	buffer[11]=(ecx>>24) & 0xFF;
 	buffer[12]='\0';
+
 	if (strcmp(buffer, "GenuineIntel") == 0 )
 	{
 		eax=1;
@@ -106,6 +117,7 @@ static int is_supported()
 		}
 		return 1;
 	}
+	/* currently only Fam15h */
 	if (strcmp(buffer, "AuthenticAMD") == 0 )
 	{
 		eax=1;
@@ -116,6 +128,10 @@ static int is_supported()
 
 	return 0;
 }
+
+/* check whether uncore frequency scaling for the current CPU is supported
+ * returns 0 if not or 1 if so
+ */
 static int is_supported_uncore()
 {
 	char buffer[13];
@@ -175,6 +191,11 @@ static int is_supported_uncore()
 	return 0;
 }
 
+
+/* this will return the maximal number of CPUs by looking for /dev/cpu/(nr)/msr[-safe]
+ * It will also check whether these can be written
+ * time complexity is O(num_cpus) for the first call. Afterwards its O(1), since the return value is buffered
+ */
 static int freq_gen_msr_get_max_entries(   )
 {
 	static long long int max = 0;
@@ -234,6 +255,7 @@ static int freq_gen_msr_get_max_entries(   )
 	return max;
 }
 
+/* will return the core frequency interface if and only if the CPU is supported and /dev/.../msr[-safe] can be written */
 static freq_gen_interface_t * freq_gen_msr_init( void )
 {
 	int ret = freq_gen_msr_get_max_entries();
@@ -247,6 +269,8 @@ static freq_gen_interface_t * freq_gen_msr_init( void )
 	return &freq_gen_msr_cpu_interface;
 }
 
+/* will return the uncore frequency interface if and only if the CPU is supported and /dev/.../msr[-safe] can be written
+ */
 static freq_gen_interface_t * freq_gen_msr_init_uncore( void )
 {
 	int ret = freq_gen_msr_get_max_entries();
@@ -261,6 +285,9 @@ static freq_gen_interface_t * freq_gen_msr_init_uncore( void )
 }
 
 
+/* will open a file descriptor for /dev/cpu/(cpu_id)/msr[-safe] and return it.
+ * /dev/cpu/(cpu)/msr[-safe] must be writable
+ */
 static freq_gen_single_device_t freq_gen_msr_device_init( int cpu_id )
 {
 	char buffer [BUFFER_SIZE];
@@ -283,6 +310,10 @@ static freq_gen_single_device_t freq_gen_msr_device_init( int cpu_id )
 	return fd;
 }
 
+/* will open a file descriptor to the first cpu of a given uncore /dev/cpu/(cpu)/msr[-safe] and return it.
+ * the first CPU is gathered by reading the first number in /sys/devices/system/node/node(uncore)/cpulist.
+ * /dev/cpu/(cpu)/msr[-safe] must be writable
+ */
 static freq_gen_single_device_t  freq_gen_msr_device_init_uncore( int uncore )
 {
 	char buffer [BUFFER_SIZE];
@@ -326,7 +357,6 @@ static freq_gen_single_device_t  freq_gen_msr_device_init_uncore( int uncore )
 	}
 	return 0;
 }
-
 static freq_gen_setting_t freq_gen_msr_prepare_access(long long target,int turbo)
 {
 	long long int * setting = malloc(sizeof(long long int));
@@ -334,9 +364,11 @@ static freq_gen_setting_t freq_gen_msr_prepare_access(long long target,int turbo
 	return setting;
 }
 
+/* will write the frequency to the MSR */
 static int freq_gen_msr_set_frequency(freq_gen_single_device_t fp, freq_gen_setting_t setting_in)
 {
-	int result=pwrite(fp,setting_in,8,IA32_PERF_CTL);
+	long long int * setting = (long long int *) setting_in;
+	int result=pwrite(fp,*setting,8,IA32_PERF_CTL);
 
 	if (result==8)
 		return 0;
@@ -345,6 +377,7 @@ static int freq_gen_msr_set_frequency(freq_gen_single_device_t fp, freq_gen_sett
 }
 
 
+/* will allocate a small datastructure, containing freq information for uncore min and max */
 static freq_gen_setting_t freq_gen_msr_prepare_access_uncore(long long target,int turbo)
 {
 	long long int * setting = malloc(sizeof(long long int));
@@ -352,6 +385,7 @@ static freq_gen_setting_t freq_gen_msr_prepare_access_uncore(long long target,in
 	return setting;
 }
 
+/* will write the uncore frequency to min/max fields of the MSR */
 static int freq_gen_msr_set_frequency_uncore(freq_gen_single_device_t fp, freq_gen_setting_t setting_in)
 {
 	int result=pwrite(fp,setting_in,8,UNCORE_RATIO_LIMIT);
@@ -361,16 +395,19 @@ static int freq_gen_msr_set_frequency_uncore(freq_gen_single_device_t fp, freq_g
 		return EIO;
 }
 
+/* frees datastructures that are prepared via freq_gen_msr_prepare_access(_uncore) */
 static void freq_gen_msr_unprepare_access(freq_gen_setting_t setting)
 {
 	free(setting);
 }
 
+/* closes an open file descriptor */
 static void freq_gen_msr_close_file(freq_gen_single_device_t fd, int cpu)
 {
 	close(fd);
 }
 
+/* no allocate variables :) nothing to do */
 static void freq_gen_msr_finalize() {}
 
 static freq_gen_interface_t freq_gen_msr_cpu_interface =

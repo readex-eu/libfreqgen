@@ -208,8 +208,8 @@ static freq_gen_interface_t sysfs_interface =
 
 static freq_gen_interface_t * init_cpufreq( void )
 {
-	int ret;
-	if (ret=freq_gen_sysfs_init())
+	int ret=freq_gen_sysfs_init();
+	if (ret)
 	{
 		errno=ret;
 		return NULL;

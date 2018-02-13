@@ -1,6 +1,7 @@
 /*
  * sysfs.c
  *
+ * Implements access to sysfs cpufreq files
  *  Created on: 26.01.2018
  *      Author: rschoene
  */
@@ -91,7 +92,7 @@ static int freq_gen_sysfs_init( void )
 
 /*
  * will check whether
- * /sys/devices/system/cpu/(cpu)/cpufreq/scaling_governor is either userspace, performance or powersave
+ * /sys/devices/system/cpu/(cpu)/cpufreq/scaling_governor is either userspace
  * will check for access to
  * /sys/devices/system/cpu/(cpu)/cpufreq/scaling_setspeed
  * */
@@ -115,13 +116,7 @@ static freq_gen_single_device_t freq_gen_sysfs_init_device(int cpu)
 	close(fd);
 	if ( strncmp("userspace",buffer,9) != 0)
 	{
-		if ( strncmp("performance",buffer,9) != 0)
-		{
-			if ( strncmp("powersave",buffer,9) != 0)
-			{
-				return -EPERM;
-			}
-		}
+		return -EPERM;
 	}
 
 	if (snprintf(buffer,BUFFER_SIZE,"%scpu%d/cpufreq/scaling_setspeed",sysfs_start,cpu) == BUFFER_SIZE )

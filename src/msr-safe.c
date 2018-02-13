@@ -191,6 +191,101 @@ static int is_supported_uncore()
 	return 0;
 }
 
+static sysfs_node_start;
+
+/*
+ * will return the max nr from /sys/devices/system/node/node(nr)
+ * will fail on sysfs not accessible
+ * */
+static int freq_gen_msr_get_num_uncore(   )
+{
+
+	/* check whether the sysfs is mounted */
+	FILE * proc_mounts = setmntent ("/proc/mounts", "r");
+
+	if (proc_mounts == NULL)
+		return -errno;
+
+	struct mntent * current_entry = getmntent(proc_mounts);
+	while (current_entry != NULL)
+	{
+		if ( strcmp(current_entry->mnt_fsname,"sysfs") == 0)
+			break;
+		current_entry = getmntent(proc_mounts);
+	}
+	/* reached error? */
+	if ( ferror( proc_mounts ) )
+	{
+		endmntent(proc_mounts);
+		return -ferror( proc_mounts );
+	}
+
+	/* reached end of file? */
+	if ( feof(proc_mounts) )
+	{
+		endmntent(proc_mounts);
+		return -EINVAL;
+	}
+
+	char buffer[BUFFER_SIZE];
+	if (snprintf(buffer, BUFFER_SIZE,"%s/devices/system/node",current_entry->mnt_dir) == BUFFER_SIZE )
+	{
+		endmntent(proc_mounts);
+		return -ENOMEM;
+	}
+	endmntent(proc_mounts);
+
+	/*check whether sysfs dir can be opened */
+	DIR * dir = opendir(buffer);
+	if ( dir == NULL )
+	{
+		return -EIO;
+	}
+
+	/* store sysfs start */
+
+	DIR * dir = opendir(buffer);
+	if ( dir  == NULL)
+	{
+		return -EIO;
+	}
+
+	sysfs_node_start = strdup(buffer);
+	if (sysfs_node_start == NULL)
+	{
+		return -ENOMEM;
+	}
+
+	struct dirent * entry;
+
+	long long int max = -EPERM;
+	/* go through all files/folders under /sys/devices/system/cpu */
+	while ( ( entry = readdir( dir ) ) != NULL )
+	{
+		/* should be a directory */
+		if ( entry->d_type == DT_DIR )
+		{
+			if ( strlen( entry->d_name ) < 4 )
+				continue;
+
+			/* should start with cpu */
+			if ( strncmp(entry->d_name, "node", 3 ) == 0 )
+			{
+				/* first after cpu == numerical digit? */
+
+				char* end;
+				long long int current=strtoll(&entry->d_name[3],&end,10);
+				/* should end in an int after cpu */
+				if ( end != ( entry->d_name + strlen(entry->d_name) ) )
+						continue;
+				if ( current > max )
+					max = current;
+			}
+		}
+	}
+	closedir(dir);
+	return max;
+}
 
 /* this will return the maximal number of CPUs by looking for /dev/cpu/(nr)/msr[-safe]
  * It will also check whether these can be written
@@ -322,12 +417,12 @@ static freq_gen_single_device_t  freq_gen_msr_device_init_uncore( int uncore )
 
 
 	if ( snprintf(buffer,BUFFER_SIZE,"/sys/devices/system/node/node%d/cpulist",uncore) == BUFFER_SIZE )
-		return ENOMEM;
+		return -ENOMEM;
 
 	int fd = open(buffer, O_RDONLY);
 	if ( fd < 0 )
 	{
-		return EIO;
+		return -EIO;
 	}
 	if ( read(fd,buffer,BUFFER_SIZE) <=0 )
 	{
@@ -338,17 +433,17 @@ static freq_gen_single_device_t  freq_gen_msr_device_init_uncore( int uncore )
 	long cpu = strtol(buffer,&tail,10);
 	if (tail == buffer)
 	{
-		return EIO;
+		return -EIO;
 	}
 
 	if ( snprintf(buffer,BUFFER_SIZE,"/dev/cpu/%ld/msr",cpu) == BUFFER_SIZE )
-		return ENOMEM;
+		return -ENOMEM;
 
 	fd = open(buffer, O_WRONLY);
 	if ( fd < 0 )
 	{
 		if ( snprintf(buffer,BUFFER_SIZE,"/dev/cpu/%ld/msr-safe",cpu) == BUFFER_SIZE )
-			return ENOMEM;
+			return -ENOMEM;
 		fd = open(buffer, O_WRONLY);
 		if ( fd < 0 )
 		{
@@ -426,7 +521,7 @@ static freq_gen_interface_t freq_gen_msr_uncore_interface =
 {
 		.name = "msrsafe-entries",
 		.init_device = freq_gen_msr_device_init_uncore,
-		.get_num_devices = freq_gen_msr_get_max_entries,
+		.get_num_devices = freq_gen_msr_get_num_uncore,
 		.prepare_set_frequency = freq_gen_msr_prepare_access_uncore,
 		.set_frequency = freq_gen_msr_set_frequency_uncore,
 		.unprepare_set_frequency = freq_gen_msr_unprepare_access,

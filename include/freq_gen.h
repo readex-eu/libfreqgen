@@ -42,23 +42,31 @@ typedef struct
 	 * @param target from prepare_set_frequency
 	 * @return 0 or an error defined in errno.h
 	 */
-	int (*set_frequency)(freq_gen_single_device_t fp, freq_gen_setting_t target); /** */
+	int (*set_frequency)(freq_gen_single_device_t fp, freq_gen_setting_t target);
 
+	/**
+	 * free resources of a setting
+	 * @param setting a setting created with prepare_set_frequency
+	 */
 	void (*unprepare_set_frequency)(freq_gen_setting_t setting);
 	/**
 	 * close a single device
-	 * @param cpu_nr the cpu_nr used in init_device that resulted i fp
+	 * @param cpu_nr the cpu_nr used in init_device() that resulted in the fp
 	 * @param fp the handle to close the device
 	 */
 	void (*close_device)(int cpu_nr, freq_gen_single_device_t fp);
 
+	/**
+	 * finalize the interface
+	 */
 	void (*finalize)();
 } freq_gen_interface_t;
 
 /**
  * Will return a method for accessing either uncore or core frequency, based on type
- * @param type get a handle for core or uncore frequency
- * @param previous If you encounter any errors, you can get the next interface in the list by passing the previous interface
+ * @param type get a handle for core or uncore frequency. The function will iterate over some implementations and return the first suitable.
+ * You may try to open a core/uncore device to check whether this works immediately after. If not, you can finalize the interface and get the next one.
+ * When there are no more suitable interfaces, this function returns NULL. When calling it again after receiving NULL, it will also start trying out the interface again from the beginning.
  * @return a handle to functions to use from now on
  */
 freq_gen_interface_t * freq_gen_init(freq_gen_dev_type type);

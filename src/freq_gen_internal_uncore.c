@@ -6,13 +6,13 @@
  */
 
 
-
 #include <stddef.h>
+#include <mntent.h>
+#include <dirent.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
-#include <dirent.h>
-#include <fcntl.h>
+#include  <fcntl.h>
 #include <stdlib.h>
 #include <errno.h>
 
@@ -24,9 +24,12 @@
  * */
 int freq_gen_get_num_uncore( )
 {
-    static nr_uncores = 0;
+    static int nr_uncores = 0;
+
     if ( nr_uncores > 0 )
+    {
     	return nr_uncores;
+    }
 	/* check whether the sysfs is mounted */
 	FILE * proc_mounts = setmntent ("/proc/mounts", "r");
 
@@ -65,14 +68,6 @@ int freq_gen_get_num_uncore( )
 	/*check whether sysfs dir can be opened */
 	DIR * dir = opendir(buffer);
 	if ( dir == NULL )
-	{
-		return -EIO;
-	}
-
-	/* store sysfs start */
-
-	DIR * dir = opendir(buffer);
-	if ( dir  == NULL)
 	{
 		return -EIO;
 	}

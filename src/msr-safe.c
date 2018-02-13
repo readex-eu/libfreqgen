@@ -18,6 +18,7 @@
 #include <errno.h>
 
 #include "freq_gen_internal.h"
+#include "freq_gen_internal_uncore.h"
 
 /* some definitions to parse cpuid */
 #define STEPPING(eax) (eax & 0xF)
@@ -368,7 +369,7 @@ static freq_gen_setting_t freq_gen_msr_prepare_access(long long target,int turbo
 static int freq_gen_msr_set_frequency(freq_gen_single_device_t fp, freq_gen_setting_t setting_in)
 {
 	long long int * setting = (long long int *) setting_in;
-	int result=pwrite(fp,*setting,8,IA32_PERF_CTL);
+	int result=pwrite(fp,setting,8,IA32_PERF_CTL);
 
 	if (result==8)
 		return 0;

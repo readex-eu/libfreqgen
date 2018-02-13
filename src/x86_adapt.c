@@ -130,8 +130,8 @@ static freq_gen_setting_t freq_gen_x86a_prepare_access(long long int target,int 
 
 static int freq_gen_x86_set_frequency(freq_gen_single_device_t fp, freq_gen_setting_t setting_in)
 {
-	struct setting * target= (struct setting* ) setting_in;
-	int result=x86_adapt_set_setting((int)fp,target->id,target->setting);
+	unsigned long long * target= (unsigned long long* ) setting_in;
+	int result=x86_adapt_set_setting((int)fp,xa_index_cpu,*target);
 	if (result==8)
 		return 0;
 	else

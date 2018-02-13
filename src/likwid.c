@@ -22,6 +22,7 @@
 
 
 #include "freq_gen_internal.h"
+#include "freq_gen_internal_uncore.h"
 
 /* implementations of the interface */
 static freq_gen_interface_t freq_gen_likwid_cpu_interface;
@@ -298,7 +299,7 @@ static freq_gen_interface_t freq_gen_likwid_uncore_interface =
 {
 		.name = "likwid-entries",
 		.init_device = freq_gen_likwid_device_init_uncore,
-		.get_num_devices = freq_gen_likwid_get_max_entries,
+		.get_num_devices = freq_gen_get_num_uncore,
 		.prepare_set_frequency = freq_gen_likwid_prepare_access_uncore,
 		.set_frequency = freq_gen_likwid_set_frequency_uncore,
 		.unprepare_set_frequency = freq_gen_likwid_unprepare_access,

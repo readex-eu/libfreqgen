@@ -208,7 +208,7 @@ static void unprepare_sysfs_access(freq_gen_setting_t setting_in)
 static long long int freq_gen_sysfs_get_frequency(freq_gen_single_device_t fp)
 {
 	char buffer[BUFFER_SIZE];
-	int result=pread((int)fp,buffer, BUFFER_SIZE,0);
+	int result=read((int)fp,buffer, BUFFER_SIZE);
 	if (result < 0)
 		return result;
 	char *tail;

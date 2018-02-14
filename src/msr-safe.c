@@ -298,12 +298,12 @@ static freq_gen_single_device_t freq_gen_msr_device_init( int cpu_id )
 	if ( snprintf(buffer,BUFFER_SIZE,"/dev/cpu/%d/msr",cpu_id) == BUFFER_SIZE )
 		return ENOMEM;
 
-	int fd = open(buffer, O_WRONLY);
+	int fd = open(buffer, O_RDWR);
 	if ( fd < 0 )
 	{
 		if ( snprintf(buffer,BUFFER_SIZE,"/dev/cpu/%d/msr-safe",cpu_id) == BUFFER_SIZE )
 			return ENOMEM;
-		fd = open(buffer, O_WRONLY);
+		fd = open(buffer, O_RDWR);
 		if ( fd < 0 )
 		{
 			return -errno;
@@ -331,12 +331,14 @@ static freq_gen_single_device_t  freq_gen_msr_device_init_uncore( int uncore )
 	{
 		return -EIO;
 	}
-	if ( read(fd,buffer,BUFFER_SIZE) <=0 )
-	{
-		close(fd);
-		return EIO;
-	}
+	int ret = read(fd,buffer,BUFFER_SIZE);
 	close(fd);
+	if ( ret <=0 )
+	{
+		return -EIO;
+	}
+	buffer[ret] ='\0';
+
 	long cpu = strtol(buffer,&tail,10);
 	if (tail == buffer)
 	{
@@ -346,18 +348,18 @@ static freq_gen_single_device_t  freq_gen_msr_device_init_uncore( int uncore )
 	if ( snprintf(buffer,BUFFER_SIZE,"/dev/cpu/%ld/msr",cpu) == BUFFER_SIZE )
 		return -ENOMEM;
 
-	fd = open(buffer, O_WRONLY);
+	fd = open(buffer, O_RDWR);
 	if ( fd < 0 )
 	{
 		if ( snprintf(buffer,BUFFER_SIZE,"/dev/cpu/%ld/msr-safe",cpu) == BUFFER_SIZE )
 			return -ENOMEM;
-		fd = open(buffer, O_WRONLY);
+		fd = open(buffer, O_RDWR);
 		if ( fd < 0 )
 		{
 			return -errno;
 		}
 	}
-	return 0;
+	return fd;
 }
 static freq_gen_setting_t freq_gen_msr_prepare_access(long long target,int turbo)
 {

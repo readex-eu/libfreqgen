@@ -225,7 +225,7 @@ static long long int freq_gen_likwid_get_frequency(freq_gen_single_device_t fp)
 	}
 	else
 	{
-		return frequency * 1000000;
+		return frequency;
 	}
 }
 

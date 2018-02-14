@@ -159,6 +159,7 @@ static freq_gen_single_device_t freq_gen_likwid_device_init( int cpu_id )
 	int ret = HPMaddThread(cpu_id);
 	if ( ret == 0 )
 	{
+		ret = freq_getCpuClockCurrent(cpu_id);
 		if (avail_freqs == NULL)
 			avail_freqs = freq_getAvailFreq(cpu_id);
 		return cpu_id;

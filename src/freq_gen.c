@@ -22,9 +22,17 @@ freq_gen_interface_t * freq_gen_init(freq_gen_dev_type type)
 	int nr_avail = 4;
 	/* new implementations will be appended here and added to freq_gen_internal.h */
 	freq_gen_interface_internal_t * avail[] =
-	{ &freq_gen_sysfs_interface_internal, &freq_gen_x86a_interface_internal,
-			&freq_gen_msr_interface_internal,
-			&freq_gen_likwid_interface_internal };
+	{
+			&freq_gen_sysfs_interface_internal,
+     		&freq_gen_msr_interface_internal
+#ifdef USEX86_ADAPT
+			, &freq_gen_x86a_interface_internal
+#endif
+#ifdef USELIKWID
+			, &freq_gen_likwid_interface_internal
+#endif
+
+	};
 
 	switch (type)
 	{

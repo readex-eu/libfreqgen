@@ -20,8 +20,14 @@ typedef struct{
 
 /* a number of implementations */
 extern freq_gen_interface_internal_t freq_gen_sysfs_interface_internal;
-extern freq_gen_interface_internal_t freq_gen_x86a_interface_internal;
+
 extern freq_gen_interface_internal_t freq_gen_msr_interface_internal;
+
+#ifdef USELIKWID
 extern freq_gen_interface_internal_t freq_gen_likwid_interface_internal;
+#endif
+#ifdef USEX86_ADAPT
+extern freq_gen_interface_internal_t freq_gen_x86a_interface_internal;
+#endif
 
 #endif /* SRC_FREQ_GEN_INTERNAL_H_ */

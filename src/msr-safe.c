@@ -372,7 +372,7 @@ static freq_gen_setting_t freq_gen_msr_prepare_access(long long target,int turbo
 static long long int freq_gen_msr_get_frequency(freq_gen_single_device_t fp)
 {
 	long long int setting = 0;
-	int result=pread(fp,&setting,8,IA32_PERF_STATUS);
+	int result=pread(fp,&setting,8,IA32_PERF_CTL);
 
 	if (result==8)
 		return ((setting>>8) & 0xFF ) * 100000000;

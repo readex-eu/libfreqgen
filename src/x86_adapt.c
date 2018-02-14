@@ -29,8 +29,6 @@ static int already_initialized;
 
 /* index for set frequency */
 static int xa_index_cpu;
-/* index for get frequency */
-static int xa_index_cpu_get;
 
 /* index for uncore min */
 static int xa_index_uncore_low;
@@ -58,14 +56,6 @@ static int freq_gen_x86a_init_cpu( void )
 			if (!uncore_is_initialized)
 				x86_adapt_finalize();
 			return -xa_index_cpu;
-		}
-
-		xa_index_cpu_get = x86_adapt_lookup_ci_name(X86_ADAPT_CPU, "Intel_Current_PState");
-		if (xa_index_cpu_get < 0 )
-		{
-			if (!uncore_is_initialized)
-				x86_adapt_finalize();
-			return -xa_index_cpu_get;
 		}
 
 		already_initialized = 1;
@@ -143,7 +133,7 @@ static freq_gen_setting_t freq_gen_x86a_prepare_access(long long int target,int 
 static long long int freq_gen_x86_get_frequency(freq_gen_single_device_t fp)
 {
 	uint64_t frequency;
-	int result=x86_adapt_get_setting((int)fp,xa_index_cpu_get,&frequency);
+	int result=x86_adapt_get_setting((int)fp,xa_index_cpu,&frequency);
 	if (result==8)
 		return ( frequency >> 8 ) * 100000000;
 	else

@@ -19,7 +19,14 @@ static int previous_uncore = -1;
 freq_gen_interface_t * freq_gen_init(freq_gen_dev_type type)
 {
 	/* this needs to be increased whenever there's a new implementation */
-	int nr_avail = 4;
+	int nr_avail = 2
+#ifdef USEX86_ADAPT
+			+1
+#endif
+#ifdef USELIKWID
+			+1
+#endif
+			;
 	/* new implementations will be appended here and added to freq_gen_internal.h */
 	freq_gen_interface_internal_t * avail[] =
 	{

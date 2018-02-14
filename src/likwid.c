@@ -159,7 +159,6 @@ static freq_gen_single_device_t freq_gen_likwid_device_init( int cpu_id )
 	int ret = HPMaddThread(cpu_id);
 	if ( ret == 0 )
 	{
-		ret = freq_getCpuClockCurrent(cpu_id);
 		if (avail_freqs == NULL)
 			avail_freqs = freq_getAvailFreq(cpu_id);
 		return cpu_id;
@@ -181,7 +180,7 @@ static freq_gen_single_device_t  freq_gen_likwid_device_init_uncore( int uncore 
  * O(strlen(avail_frequencies))+malloc
  * turbo is ignored
  */
-static freq_gen_setting_t freq_gen_likwid_prepare_access(long long target,int turbo)
+static freq_gen_setting_t freq_gen_likwid_prepare_access( long long target , int turbo )
 {
 	uint64_t current_u=0;
 	target=target/1000;
@@ -217,6 +216,19 @@ static freq_gen_setting_t freq_gen_likwid_prepare_access_uncore(long long target
 	return setting;
 }
 
+static long long int freq_gen_likwid_get_frequency(freq_gen_single_device_t fp)
+{
+	int frequency = freq_getCpuClockMax( fp );
+	if ( frequency == 0 )
+	{
+		return -EIO;
+	}
+	else
+	{
+		return frequency * 1000000;
+	}
+}
+
 /* applies core frequency setting
  * O(freq_setCpuClockMin)+O(freq_setCpuClockMax)
  * If AVOID_LIKWID_BUG is activated during compilation, return codes are not checked
@@ -240,6 +252,19 @@ static int freq_gen_likwid_set_frequency(freq_gen_single_device_t fp, freq_gen_s
 	}
 #endif /* AVOID_LIKWID_BUG */
 	return 0;
+}
+
+static long long int freq_gen_likwid_get_frequency_uncore(freq_gen_single_device_t fp)
+{
+	uint64_t frequency = freq_getUncoreFreqMax( fp );
+	if ( frequency == 0 )
+	{
+		return -EIO;
+	}
+	else
+	{
+		return frequency * 1000000;
+	}
 }
 
 /* applies uncore frequency setting
@@ -290,6 +315,7 @@ static freq_gen_interface_t freq_gen_likwid_cpu_interface =
 		.init_device = freq_gen_likwid_device_init,
 		.get_num_devices = freq_gen_likwid_get_max_entries,
 		.prepare_set_frequency = freq_gen_likwid_prepare_access,
+		.get_frequency = freq_gen_likwid_get_frequency,
 		.set_frequency = freq_gen_likwid_set_frequency,
 		.unprepare_set_frequency = freq_gen_likwid_unprepare_access,
 		.close_device = freq_gen_likwid_close_file,
@@ -302,6 +328,7 @@ static freq_gen_interface_t freq_gen_likwid_uncore_interface =
 		.init_device = freq_gen_likwid_device_init_uncore,
 		.get_num_devices = freq_gen_get_num_uncore,
 		.prepare_set_frequency = freq_gen_likwid_prepare_access_uncore,
+		.get_frequency = freq_gen_likwid_get_frequency_uncore,
 		.set_frequency = freq_gen_likwid_set_frequency_uncore,
 		.unprepare_set_frequency = freq_gen_likwid_unprepare_access,
 		.close_device = freq_gen_likwid_close_file,

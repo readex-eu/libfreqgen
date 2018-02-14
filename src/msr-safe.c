@@ -29,6 +29,7 @@
 #define EXT_FAMILY(eax) ((eax >> 20) & 0xFF)
 
 /* used registers for core/uncore frequency toggling */
+#define IA32_PERF_STATUS 0x198
 #define IA32_PERF_CTL 0x199
 #define UNCORE_RATIO_LIMIT 0x620
 
@@ -366,6 +367,18 @@ static freq_gen_setting_t freq_gen_msr_prepare_access(long long target,int turbo
 }
 
 /* will write the frequency to the MSR */
+static long long int freq_gen_msr_get_frequency(freq_gen_single_device_t fp)
+{
+	long long int setting = 0;
+	int result=pread(fp,&setting,8,IA32_PERF_STATUS);
+
+	if (result==8)
+		return ((setting>>8) & 0xFF ) * 100000000;
+	else
+		return -EIO;
+}
+
+/* will write the frequency to the MSR */
 static int freq_gen_msr_set_frequency(freq_gen_single_device_t fp, freq_gen_setting_t setting_in)
 {
 	long long int * setting = (long long int *) setting_in;
@@ -375,6 +388,18 @@ static int freq_gen_msr_set_frequency(freq_gen_single_device_t fp, freq_gen_sett
 		return 0;
 	else
 		return -result;
+}
+
+/* will write the frequency to the MSR */
+static long long int freq_gen_msr_get_frequency_uncore(freq_gen_single_device_t fp)
+{
+	long long int setting = 0;
+	int result=pread(fp,&setting,8,UNCORE_RATIO_LIMIT);
+
+	if (result==8)
+		return (setting&0x77)*100000000;
+	else
+		return -EIO;
 }
 
 
@@ -417,6 +442,7 @@ static freq_gen_interface_t freq_gen_msr_cpu_interface =
 		.init_device = freq_gen_msr_device_init,
 		.get_num_devices = freq_gen_msr_get_max_entries,
 		.prepare_set_frequency = freq_gen_msr_prepare_access,
+		.get_frequency =freq_gen_msr_get_frequency,
 		.set_frequency = freq_gen_msr_set_frequency,
 		.unprepare_set_frequency = freq_gen_msr_unprepare_access,
 		.close_device = freq_gen_msr_close_file,
@@ -429,6 +455,7 @@ static freq_gen_interface_t freq_gen_msr_uncore_interface =
 		.init_device = freq_gen_msr_device_init_uncore,
 		.get_num_devices = freq_gen_get_num_uncore,
 		.prepare_set_frequency = freq_gen_msr_prepare_access_uncore,
+		.get_frequency =freq_gen_msr_get_frequency_uncore,
 		.set_frequency = freq_gen_msr_set_frequency_uncore,
 		.unprepare_set_frequency = freq_gen_msr_unprepare_access,
 		.close_device = freq_gen_msr_close_file,

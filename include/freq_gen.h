@@ -34,7 +34,16 @@ typedef struct
 	 * @param turbo should turbo be enabled?
 	 * @return NULL if failed, otherwise a pointer
 	 */
-	freq_gen_setting_t (*prepare_set_frequency)(long long target,int turbo);/** < prepare a specific frequency for a device */
+	freq_gen_setting_t (*prepare_set_frequency)(long long int target,int turbo);/** < prepare a specific frequency for a device */
+
+	/**
+	 * get the frequency on a core/uncore
+	 * If the interface provides a frequency range, it will return the maximal frequency
+	 * @param fp from init_device
+	 * @param target from prepare_set_frequency
+	 * @return frequency or an error (<0)
+	 */
+	long long int (*get_frequency)(freq_gen_single_device_t fp);
 
 	/**
 	 * set the frequency on a core/uncore

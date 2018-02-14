@@ -25,15 +25,17 @@ static freq_gen_interface_t freq_gen_x86a_cpu_interface;
 static freq_gen_interface_t freq_gen_x86a_uncore_interface;
 
 /* whether x86_adapt_init already called */
-static int already_initialized=0;
+static int already_initialized;
 
 /* index for set frequency */
-static int xa_index_cpu=0;
+static int xa_index_cpu;
+/* index for get frequency */
+static int xa_index_cpu_get;
 
 /* index for uncore min */
-static int xa_index_uncore_low=0;
+static int xa_index_uncore_low;
 /* index for uncore max */
-static int xa_index_uncore_high=0;
+static int xa_index_uncore_high;
 
 /* whether one of these is initialized and used, only when both are not used any more x86a may be finalized */
 static int core_is_initialized, uncore_is_initialized;
@@ -49,7 +51,7 @@ static int freq_gen_x86a_init_cpu( void )
 
 	if ( ret == 0 )
 	{
-		/* search for core freq parameter */
+		/* search for core freq parameters */
 		xa_index_cpu = x86_adapt_lookup_ci_name(X86_ADAPT_CPU, "Intel_Target_PState");
 		if (xa_index_cpu < 0 )
 		{
@@ -57,6 +59,15 @@ static int freq_gen_x86a_init_cpu( void )
 				x86_adapt_finalize();
 			return -xa_index_cpu;
 		}
+
+		xa_index_cpu_get = x86_adapt_lookup_ci_name(X86_ADAPT_CPU, "Intel_Current_PState");
+		if (xa_index_cpu_get < 0 )
+		{
+			if (!uncore_is_initialized)
+				x86_adapt_finalize();
+			return -xa_index_cpu_get;
+		}
+
 		already_initialized = 1;
 		core_is_initialized = 1;
 		return 0;
@@ -128,6 +139,17 @@ static freq_gen_setting_t freq_gen_x86a_prepare_access(long long int target,int 
 	return setting;
 }
 
+
+static long long int freq_gen_x86_get_frequency(freq_gen_single_device_t fp)
+{
+	uint64_t frequency;
+	int result=x86_adapt_get_setting((int)fp,xa_index_cpu_get,&frequency);
+	if (result==8)
+		return ( frequency >> 8 ) * 100000000;
+	else
+		return -EIO;
+}
+
 static int freq_gen_x86_set_frequency(freq_gen_single_device_t fp, freq_gen_setting_t setting_in)
 {
 	unsigned long long * target= (unsigned long long* ) setting_in;
@@ -138,6 +160,15 @@ static int freq_gen_x86_set_frequency(freq_gen_single_device_t fp, freq_gen_sett
 		return -result;
 }
 
+static long long int freq_gen_x86_get_frequency_uncore(freq_gen_single_device_t fp)
+{
+	uint64_t frequency;
+	int result=x86_adapt_get_setting((int)fp,xa_index_uncore_high,&frequency);
+	if (result==8)
+		return frequency * 100000000;
+	else
+		return -EIO;
+}
 
 static int freq_gen_x86_set_frequency_uncore(freq_gen_single_device_t fp, freq_gen_setting_t setting_in)
 {
@@ -189,6 +220,7 @@ static freq_gen_interface_t freq_gen_x86a_cpu_interface =
 		.init_device = freq_gen_x86a_init_cpu_device,
 		.get_num_devices = freq_gen_x86a_get_max_cpus,
 		.prepare_set_frequency = freq_gen_x86a_prepare_access,
+		.get_frequency = freq_gen_x86_get_frequency,
 		.set_frequency = freq_gen_x86_set_frequency,
 		.unprepare_set_frequency = freq_gen_x86a_unprepare_access,
 		.close_device = freq_gen_x86a_close_file,
@@ -212,6 +244,7 @@ static freq_gen_interface_t freq_gen_x86a_uncore_interface =
 		.init_device = freq_gen_x86a_init_uncore_device,
 		.get_num_devices = freq_gen_x86a_get_max_cpus_uncore,
 		.prepare_set_frequency = freq_gen_x86a_prepare_access,
+		.get_frequency = freq_gen_x86_get_frequency_uncore,
 		.set_frequency = freq_gen_x86_set_frequency_uncore,
 		.unprepare_set_frequency = freq_gen_x86a_unprepare_access,
 		.close_device = freq_gen_x86a_close_file_uncore,

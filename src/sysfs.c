@@ -175,7 +175,7 @@ static int freq_gen_sysfs_get_max_sysfs_entries(   )
 }
 
 /* prepares a setting that can be applied */
-static freq_gen_setting_t prepare_sysfs_access(long long int target,int turbo)
+static freq_gen_setting_t freq_gen_prepare_sysfs_access(long long int target,int turbo)
 {
 	char buffer[256];
 	struct setting_s * setting= malloc(sizeof(struct setting_s));
@@ -205,7 +205,29 @@ static void unprepare_sysfs_access(freq_gen_setting_t setting_in)
 /*
  * apply a prepared setting for a CPU
  * */
-static int sysfs_set_frequency(freq_gen_single_device_t fp, freq_gen_setting_t setting_in)
+static long long int freq_gen_sysfs_get_frequency(freq_gen_single_device_t fp)
+{
+	char buffer[BUFFER_SIZE];
+	int result=pread((int)fp,buffer, BUFFER_SIZE,0);
+	if (result < 0)
+		return result;
+	char *tail;
+	long long int frequency=strtoll(buffer,&tail,10);
+	/* there should only be the in within the file */
+	if ( buffer + result == tail )
+	{
+		return frequency*1000;
+	}
+	else
+	{
+		return -EIO;
+	}
+}
+
+/*
+ * apply a prepared setting for a CPU
+ * */
+static int freq_gen_sysfs_set_frequency(freq_gen_single_device_t fp, freq_gen_setting_t setting_in)
 {
 	struct setting_s * target= (struct setting_s* ) setting_in;
 	int result=pwrite((int)fp,target->string,target->len,0);
@@ -215,7 +237,7 @@ static int sysfs_set_frequency(freq_gen_single_device_t fp, freq_gen_setting_t s
 		return EIO;
 }
 
-static void sysfs_close_file(int cpu_nr, freq_gen_single_device_t fp)
+static void freq_gen_sysfs_close_file(int cpu_nr, freq_gen_single_device_t fp)
 {
 	close(fp);
 }
@@ -225,13 +247,14 @@ static freq_gen_interface_t sysfs_interface =
 		.name = "sysfs-entries",
 		.init_device = freq_gen_sysfs_init_device,
 		.get_num_devices = freq_gen_sysfs_get_max_sysfs_entries,
-		.prepare_set_frequency = prepare_sysfs_access,
-		.set_frequency = sysfs_set_frequency,
+		.prepare_set_frequency = freq_gen_prepare_sysfs_access,
+		.get_frequency = freq_gen_sysfs_get_frequency,
+		.set_frequency = freq_gen_sysfs_set_frequency,
 		.unprepare_set_frequency = unprepare_sysfs_access,
-		.close_device = sysfs_close_file
+		.close_device = freq_gen_sysfs_close_file
 };
 
-static freq_gen_interface_t * init_cpufreq( void )
+static freq_gen_interface_t * freq_gen_init_cpufreq( void )
 {
 	int ret=freq_gen_sysfs_init();
 	if (ret)
@@ -244,7 +267,7 @@ static freq_gen_interface_t * init_cpufreq( void )
 
 freq_gen_interface_internal_t freq_gen_sysfs_interface_internal =
 {
-		.init_cpufreq = init_cpufreq,
+		.init_cpufreq = freq_gen_init_cpufreq,
 		.init_uncorefreq = NULL
 
 };

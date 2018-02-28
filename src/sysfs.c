@@ -133,6 +133,11 @@ static freq_gen_single_device_t freq_gen_sysfs_init_device(int cpu)
  * */
 static int freq_gen_sysfs_get_max_sysfs_entries(   )
 {
+	static long long int max = -1;
+	if ( max != -1 )
+	{
+		return max;
+	}
 	if ( sysfs_start == NULL)
 	{
 		return -EAGAIN;
@@ -144,8 +149,6 @@ static int freq_gen_sysfs_get_max_sysfs_entries(   )
 		return -EIO;
 	}
 	struct dirent * entry;
-
-	long long int max = 0;
 	/* go through all files/folders under /sys/devices/system/cpu */
 	while ( ( entry = readdir( dir ) ) != NULL )
 	{
@@ -165,12 +168,15 @@ static int freq_gen_sysfs_get_max_sysfs_entries(   )
 				/* should end in an int after cpu */
 				if ( end != ( entry->d_name + strlen(entry->d_name) ) )
 						continue;
-				if ( ( current + 1 )> max )
-					max = current + 1;
+				if ( current > max )
+					max = current;
 			}
 		}
 	}
 	closedir(dir);
+	if ( max == -1 )
+		return -EACCES;
+	max = max + 1;
 	return max;
 }
 

@@ -200,8 +200,8 @@ static int is_supported_uncore()
  */
 static int freq_gen_msr_get_max_entries(   )
 {
-	static long long int max = 0;
-	if ( max != 0 )
+	static long long int max = -1;
+	if ( max != -1 )
 	{
 		return max;
 	}
@@ -252,8 +252,9 @@ static int freq_gen_msr_get_max_entries(   )
 		}
 	}
 	closedir(dir);
-	if ( max == 0 )
+	if ( max == -1 )
 		return -EACCES;
+	max = max + 1;
 	return max;
 }
 

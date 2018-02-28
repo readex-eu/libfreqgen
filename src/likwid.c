@@ -39,8 +39,8 @@ static char* avail_freqs;
  */
 static int freq_gen_likwid_get_max_entries(   )
 {
-	static long long int max = 0;
-	if ( max != 0 )
+	static long long int max = -1;
+	if ( max != -1 )
 	{
 		return max;
 	}
@@ -93,6 +93,7 @@ static int freq_gen_likwid_get_max_entries(   )
 	closedir(dir);
 	if ( max == 0 )
 		return -EACCES;
+	max=max+1;
 	return max;
 }
 

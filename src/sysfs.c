@@ -165,8 +165,8 @@ static int freq_gen_sysfs_get_max_sysfs_entries(   )
 				/* should end in an int after cpu */
 				if ( end != ( entry->d_name + strlen(entry->d_name) ) )
 						continue;
-				if ( current > max )
-					max = current;
+				if ( ( current + 1 )> max )
+					max = current + 1;
 			}
 		}
 	}

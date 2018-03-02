@@ -300,7 +300,7 @@ static void freq_gen_likwid_unprepare_access(freq_gen_setting_t setting)
 }
 
 /* The daemon will do it, so nothing to do here */
-static void freq_gen_likwid_close_file(freq_gen_single_device_t fd, int cpu) {}
+static void freq_gen_likwid_do_nothing(freq_gen_single_device_t fd, int cpu) {}
 
 /* close connection to access daemon and free some data structures */
 static void freq_gen_likwid_finalize()
@@ -319,7 +319,7 @@ static freq_gen_interface_t freq_gen_likwid_cpu_interface =
 		.get_frequency = freq_gen_likwid_get_frequency,
 		.set_frequency = freq_gen_likwid_set_frequency,
 		.unprepare_set_frequency = freq_gen_likwid_unprepare_access,
-		.close_device = freq_gen_likwid_close_file,
+		.close_device = freq_gen_likwid_do_nothing,
 		.finalize=freq_gen_likwid_finalize
 };
 
@@ -332,8 +332,8 @@ static freq_gen_interface_t freq_gen_likwid_uncore_interface =
 		.get_frequency = freq_gen_likwid_get_frequency_uncore,
 		.set_frequency = freq_gen_likwid_set_frequency_uncore,
 		.unprepare_set_frequency = freq_gen_likwid_unprepare_access,
-		.close_device = freq_gen_likwid_close_file,
-		.finalize=freq_gen_likwid_finalize
+		.close_device = freq_gen_likwid_do_nothing,
+		.finalize=freq_gen_likwid_do_nothing
 };
 
 freq_gen_interface_internal_t freq_gen_likwid_interface_internal =

@@ -248,6 +248,8 @@ static void freq_gen_sysfs_close_file(int cpu_nr, freq_gen_single_device_t fp)
 	close(fp);
 }
 
+static void ignore(){}
+
 static freq_gen_interface_t sysfs_interface =
 {
 		.name = "sysfs-entries",
@@ -257,7 +259,8 @@ static freq_gen_interface_t sysfs_interface =
 		.get_frequency = freq_gen_sysfs_get_frequency,
 		.set_frequency = freq_gen_sysfs_set_frequency,
 		.unprepare_set_frequency = unprepare_sysfs_access,
-		.close_device = freq_gen_sysfs_close_file
+		.close_device = freq_gen_sysfs_close_file,
+        .finalize = ignore
 };
 
 static freq_gen_interface_t * freq_gen_init_cpufreq( void )

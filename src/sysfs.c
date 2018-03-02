@@ -184,6 +184,7 @@ static int freq_gen_sysfs_get_max_sysfs_entries(   )
 static freq_gen_setting_t freq_gen_prepare_sysfs_access(long long int target,int turbo)
 {
 	char buffer[256];
+	sprintf(buffer,"%lli",target/1000);
 	struct setting_s * setting= malloc(sizeof(struct setting_s));
 	if ( setting == NULL)
 	{

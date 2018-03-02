@@ -123,7 +123,7 @@ static freq_gen_single_device_t freq_gen_sysfs_init_device(int cpu)
 	{
 		return -ENOMEM;
 	}
-	fd = open(buffer,O_WRONLY);
+	fd = open(buffer,O_RDWR);
 	return fd;
 }
 
@@ -219,8 +219,8 @@ static long long int freq_gen_sysfs_get_frequency(freq_gen_single_device_t fp)
 		return result;
 	char *tail;
 	long long int frequency=strtoll(buffer,&tail,10);
-	/* there should only be the in within the file */
-	if ( buffer + result == tail )
+	/* there should only be the in within the file and a \n */
+	if ( buffer + result == tail + 1 )
 	{
 		return frequency*1000;
 	}

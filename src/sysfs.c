@@ -263,6 +263,7 @@ static freq_gen_interface_t sysfs_interface =
         .finalize = ignore
 };
 
+
 static freq_gen_interface_t * freq_gen_init_cpufreq( void )
 {
 	int ret=freq_gen_sysfs_init();

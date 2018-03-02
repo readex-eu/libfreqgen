@@ -336,6 +336,7 @@ static freq_gen_interface_t freq_gen_likwid_uncore_interface =
 		.finalize=freq_gen_likwid_do_nothing
 };
 
+
 freq_gen_interface_internal_t freq_gen_likwid_interface_internal =
 {
 		.init_cpufreq = freq_gen_likwid_init,

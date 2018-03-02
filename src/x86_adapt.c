@@ -38,11 +38,80 @@ static int xa_index_uncore_high;
 /* whether one of these is initialized and used, only when both are not used any more x86a may be finalized */
 static int core_is_initialized, uncore_is_initialized;
 
+static int is_newer = 1;
+
+/* some definitions to parse cpuid */
+#define STEPPING(eax) (eax & 0xF)
+#define MODEL(eax) ((eax >> 4) & 0xF)
+#define FAMILY(eax) ((eax >> 8) & 0xF)
+#define TYPE(eax) ((eax >> 12) & 0x3)
+#define EXT_MODEL(eax) ((eax >> 16) & 0xF)
+#define EXT_FAMILY(eax) ((eax >> 20) & 0xFF)
+
+
+/* cpuid call in C */
+static inline void cpuid(unsigned int *eax, unsigned int *ebx,
+                         unsigned int *ecx, unsigned int *edx)
+{
+        /* ecx is often an input as well as an output. */
+        asm volatile("cpuid"
+            : "=a" (*eax), "=b" (*ebx), "=c" (*ecx), "=d" (*edx)
+            : "0" (*eax), "2" (*ecx));
+}
+
+
+/* check whether frequency scaling for the current CPU is supported
+ * returns 0 if not or 1 if so
+ */
+static void check_processor()
+{
+    char buffer[13];
+    unsigned int eax = 0, ebx=0, ecx=0, edx=0;
+    cpuid(&eax,&ebx,&ecx,&edx);
+
+    /* reorder name string */
+    buffer[0]=ebx & 0xFF;
+    buffer[1]=(ebx>>8) & 0xFF;
+    buffer[2]=(ebx>>16) & 0xFF;
+    buffer[3]=(ebx>>24) & 0xFF;
+    buffer[4]=edx & 0xFF;
+    buffer[5]=(edx>>8) & 0xFF;
+    buffer[6]=(edx>>16) & 0xFF;
+    buffer[7]=(edx>>24) & 0xFF;
+    buffer[8]=ecx & 0xFF;
+    buffer[9]=(ecx>>8) & 0xFF;
+    buffer[10]=(ecx>>16) & 0xFF;
+    buffer[11]=(ecx>>24) & 0xFF;
+    buffer[12]='\0';
+
+    if (strcmp(buffer, "GenuineIntel") == 0 )
+    {
+        eax=1;
+        cpuid(&eax,&ebx,&ecx,&edx);
+        if ( FAMILY(eax) != 6 )
+            return;
+        switch ((EXT_MODEL(eax) << 4 )+ MODEL(eax))
+        {
+        /* Sandy Bridge */
+        case 0x2a:
+        case 0x2d:
+        /* Ivy Bridge */
+        case 0x3a:
+        case 0x3e:
+            is_newer = 0;
+            break;
+        default:
+            break;
+        }
+    }
+}
+
 /* initialize change core frequency */
 static int freq_gen_x86a_init_cpu( void )
 {
 	int ret = 0;
 
+	check_processor();
 	/* initialize */
 	if ( ! already_initialized )
 		ret = x86_adapt_init();
@@ -125,7 +194,10 @@ static freq_gen_setting_t freq_gen_x86a_prepare_access(long long int target,int 
 	{
 		return NULL;
 	}
-	*setting = target/100000000;
+	if (is_newer)
+	    *setting = (target/100000000)<<8;
+	else
+        *setting = (target/100000000);
 	return setting;
 }
 
@@ -135,7 +207,10 @@ static long long int freq_gen_x86_get_frequency(freq_gen_single_device_t fp)
 	uint64_t frequency;
 	int result=x86_adapt_get_setting((int)fp,xa_index_cpu,&frequency);
 	if (result==8)
-		return ( frequency >> 8 ) * 100000000;
+	    if (is_newer)
+	        return ( frequency >> 8 ) * 100000000;
+	    else
+            return frequency * 100000000;
 	else
 		return -EIO;
 }

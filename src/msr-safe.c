@@ -37,6 +37,7 @@
 static freq_gen_interface_t freq_gen_msr_cpu_interface;
 static freq_gen_interface_t freq_gen_msr_uncore_interface;
 
+static int is_newer = 1;
 
 /* cpuid call in C */
 static inline void cpuid(unsigned int *eax, unsigned int *ebx,
@@ -82,13 +83,17 @@ static int is_supported()
 		{
 		/* Sandy Bridge */
 		case 0x2a:
+            is_newer = 0;
 			break;
 		case 0x2d:
+            is_newer = 0;
 			break;
 		/* Ivy Bridge */
 		case 0x3a:
+            is_newer = 0;
 			break;
 		case 0x3e:
+            is_newer = 0;
 			break;
 		/* Haswell */
 		case 0x3c:
@@ -364,9 +369,12 @@ static freq_gen_single_device_t  freq_gen_msr_device_init_uncore( int uncore )
 }
 static freq_gen_setting_t freq_gen_msr_prepare_access(long long target,int turbo)
 {
-	long long int * setting = malloc(sizeof(long long int));
-	*setting=((target)/100000000)<<8;
-	return setting;
+    long long int * setting = malloc(sizeof(long long int));
+    if (is_newer)
+	    *setting=((target)/100000000)<<8;
+    else
+        *setting=((target)/100000000);
+    return setting;
 }
 
 /* will write the frequency to the MSR */
@@ -376,7 +384,10 @@ static long long int freq_gen_msr_get_frequency(freq_gen_single_device_t fp)
 	int result=pread(fp,&setting,8,IA32_PERF_CTL);
 
 	if (result==8)
-		return ((setting>>8) & 0xFF ) * 100000000;
+	    if (is_newer)
+	        return ((setting>>8) & 0xFF ) * 100000000;
+	    else
+	        return (setting & 0xFF ) * 100000000;
 	else
 		return -EIO;
 }

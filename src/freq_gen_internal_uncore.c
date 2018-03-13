@@ -85,12 +85,12 @@ int freq_gen_get_num_uncore( )
 				continue;
 
 			/* should start with cpu */
-			if ( strncmp(entry->d_name, "node", 3 ) == 0 )
+			if ( strncmp(entry->d_name, "node", 4 ) == 0 )
 			{
 				/* first after cpu == numerical digit? */
 
 				char* end;
-				long long int current=strtoll(&entry->d_name[3],&end,10);
+				long long int current=strtoll(&entry->d_name[4],&end,10);
 				/* should end in an int after cpu */
 				if ( end != ( entry->d_name + strlen(entry->d_name) ) )
 						continue;
@@ -100,6 +100,6 @@ int freq_gen_get_num_uncore( )
 		}
 	}
 	closedir(dir);
-	nr_uncores = max;
-	return max;
+	nr_uncores = max + 1;
+	return nr_uncores;
 }

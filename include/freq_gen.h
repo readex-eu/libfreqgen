@@ -31,7 +31,7 @@ typedef struct
 	/**
 	 * prepare a specific frequency for a device
 	 * @param frequency the frequency to set in Hz
-	 * @param turbo should turbo be enabled?
+	 * @param turbo should turbo be enabled? (currently ignored)
 	 * @return NULL if failed, otherwise a pointer
 	 */
 	freq_gen_setting_t (*prepare_set_frequency)(long long int target,int turbo);/** < prepare a specific frequency for a device */

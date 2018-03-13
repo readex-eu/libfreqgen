@@ -75,7 +75,7 @@ int freq_gen_get_num_uncore( )
 	struct dirent * entry;
 
 	long long int max = -EPERM;
-	/* go through all files/folders under /sys/devices/system/cpu */
+	/* go through all files/folders under /sys/devices/system/node */
 	while ( ( entry = readdir( dir ) ) != NULL )
 	{
 		/* should be a directory */
@@ -84,14 +84,14 @@ int freq_gen_get_num_uncore( )
 			if ( strlen( entry->d_name ) < 4 )
 				continue;
 
-			/* should start with cpu */
+			/* should start with node */
 			if ( strncmp(entry->d_name, "node", 4 ) == 0 )
 			{
-				/* first after cpu == numerical digit? */
+				/* first after node == numerical digit? */
 
 				char* end;
 				long long int current=strtoll(&entry->d_name[4],&end,10);
-				/* should end in an int after cpu */
+				/* should end in an int after node */
 				if ( end != ( entry->d_name + strlen(entry->d_name) ) )
 						continue;
 				if ( current > max )

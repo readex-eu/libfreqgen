@@ -34,7 +34,7 @@ endif()
 
 include_directories(include)
 add_library(freqgen SHARED ${SOURCES})
-
+set_target_properties(freqgen PROPERTIES PUBLIC_HEADER "include/freq_gen.h;include/freqgen.h")
 
 if (X86Adapt_FOUND)
     target_link_libraries(freqgen ${X86_ADAPT_LIBRARIES})
@@ -43,4 +43,6 @@ if (LIKWID_FOUND)
     target_link_libraries(freqgen ${LIKWID_LIBRARIES})
 endif()
 
-install(TARGETS freqgen LIBRARY DESTINATION lib)
+install(TARGETS freqgen LIBRARY DESTINATION lib
+        PUBLIC_HEADER DESTINATION include
+)

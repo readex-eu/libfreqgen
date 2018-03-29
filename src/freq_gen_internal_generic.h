@@ -5,8 +5,8 @@
  *      Author: rschoene
  */
 
-#ifndef SRC_FREQ_GEN_INTERNAL_UNCORE_H_
-#define SRC_FREQ_GEN_INTERNAL_UNCORE_H_
+#ifndef SRC_FREQ_GEN_INTERNAL_GENERIC_H_
+#define SRC_FREQ_GEN_INTERNAL_GENERIC_H_
 
 /*
  * will return the max nr from /sys/devices/system/node/node(nr)
@@ -15,4 +15,4 @@
 int freq_gen_get_num_uncore( void );
 
 
-#endif /* SRC_FREQ_GEN_INTERNAL_UNCORE_H_ */
+#endif /* SRC_FREQ_GEN_INTERNAL_GENERIC_H_ */

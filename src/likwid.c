@@ -22,7 +22,7 @@
 
 
 #include "freq_gen_internal.h"
-#include "freq_gen_internal_uncore.h"
+#include "freq_gen_internal_generic.h"
 
 /* implementations of the interface */
 static freq_gen_interface_t freq_gen_likwid_cpu_interface;
@@ -230,6 +230,19 @@ static long long int freq_gen_likwid_get_frequency(freq_gen_single_device_t fp)
 	}
 }
 
+static long long int freq_gen_likwid_get_min_frequency(freq_gen_single_device_t fp)
+{
+    int frequency = freq_getCpuClockMin( fp );
+    if ( frequency == 0 )
+    {
+        return -EIO;
+    }
+    else
+    {
+        return frequency;
+    }
+}
+
 /* applies core frequency setting
  * O(freq_setCpuClockMin)+O(freq_setCpuClockMax)
  * If AVOID_LIKWID_BUG is activated during compilation, return codes are not checked
@@ -255,6 +268,25 @@ static int freq_gen_likwid_set_frequency(freq_gen_single_device_t fp, freq_gen_s
 	return 0;
 }
 
+/* applies core frequency setting
+ * O(freq_setCpuClockMin)+O(freq_setCpuClockMax)
+ * If AVOID_LIKWID_BUG is activated during compilation, return codes are not checked
+ */
+static int freq_gen_likwid_set_min_frequency(freq_gen_single_device_t fp, freq_gen_setting_t setting_in)
+{
+    uint64_t * setting = (uint64_t *) setting_in;
+#ifdef AVOID_LIKWID_BUG
+    freq_setCpuClockMin(fp, *setting);
+#else /* AVOID_LIKWID_BUG */
+    uint64_t set_freq = freq_setCpuClockMin(fp, *setting);
+    if ( set_freq == 0 )
+    {
+        return EIO;
+    }
+#endif /* AVOID_LIKWID_BUG */
+    return 0;
+}
+
 static long long int freq_gen_likwid_get_frequency_uncore(freq_gen_single_device_t fp)
 {
 	uint64_t frequency = freq_getUncoreFreqMax( fp );
@@ -266,6 +298,19 @@ static long long int freq_gen_likwid_get_frequency_uncore(freq_gen_single_device
 	{
 		return frequency * 1000000;
 	}
+}
+
+static long long int freq_gen_likwid_get_min_frequency_uncore(freq_gen_single_device_t fp)
+{
+    uint64_t frequency = freq_getUncoreFreqMin( fp );
+    if ( frequency == 0 )
+    {
+        return -EIO;
+    }
+    else
+    {
+        return frequency * 1000000;
+    }
 }
 
 /* applies uncore frequency setting
@@ -293,6 +338,21 @@ static int freq_gen_likwid_set_frequency_uncore(freq_gen_single_device_t fp, fre
 	return 0;
 }
 
+static int freq_gen_likwid_set_min_frequency_uncore(freq_gen_single_device_t fp, freq_gen_setting_t setting_in)
+{
+    uint64_t * setting = (uint64_t *) setting_in;
+#ifdef AVOID_LIKWID_BUG
+    freq_setUncoreFreqMin(fp, *setting);
+#else /* AVOID_LIKWID_BUG */
+    uint64_t set_freq = freq_setUncoreFreqMin(fp, *setting);
+    if ( set_freq == 0 )
+    {
+        return EIO;
+    }
+#endif /* AVOID_LIKWID_BUG */
+    return 0;
+}
+
 /* Just free some data structure */
 static void freq_gen_likwid_unprepare_access(freq_gen_setting_t setting)
 {
@@ -317,7 +377,9 @@ static freq_gen_interface_t freq_gen_likwid_cpu_interface =
 		.get_num_devices = freq_gen_likwid_get_max_entries,
 		.prepare_set_frequency = freq_gen_likwid_prepare_access,
 		.get_frequency = freq_gen_likwid_get_frequency,
-		.set_frequency = freq_gen_likwid_set_frequency,
+        .get_min_frequency = freq_gen_likwid_get_min_frequency,
+        .set_frequency = freq_gen_likwid_set_frequency,
+        .set_min_frequency = freq_gen_likwid_set_min_frequency,
 		.unprepare_set_frequency = freq_gen_likwid_unprepare_access,
 		.close_device = freq_gen_likwid_do_nothing,
 		.finalize=freq_gen_likwid_finalize
@@ -330,7 +392,9 @@ static freq_gen_interface_t freq_gen_likwid_uncore_interface =
 		.get_num_devices = freq_gen_get_num_uncore,
 		.prepare_set_frequency = freq_gen_likwid_prepare_access_uncore,
 		.get_frequency = freq_gen_likwid_get_frequency_uncore,
+        .get_min_frequency = freq_gen_likwid_get_min_frequency_uncore,
 		.set_frequency = freq_gen_likwid_set_frequency_uncore,
+        .set_min_frequency = freq_gen_likwid_set_min_frequency_uncore,
 		.unprepare_set_frequency = freq_gen_likwid_unprepare_access,
 		.close_device = freq_gen_likwid_do_nothing,
 		.finalize=freq_gen_likwid_do_nothing

@@ -37,21 +37,41 @@ typedef struct
 	freq_gen_setting_t (*prepare_set_frequency)(long long int target,int turbo);/** < prepare a specific frequency for a device */
 
 	/**
-	 * get the frequency on a core/uncore
+	 * get the frequency of a core/uncore
 	 * If the interface provides a frequency range, it will return the maximal frequency
 	 * @param fp from init_device
-	 * @param target from prepare_set_frequency
-	 * @return frequency or an error (<0)
+	 * @return frequency in Hz or an error (<0)
 	 */
 	long long int (*get_frequency)(freq_gen_single_device_t fp);
 
+    /**
+     * get the minimal frequency of a core/uncore
+     * If the interface provides a frequency range, it will return the maximal frequency
+     * Callers must check whether this function exists (get_min_frequency == NULL) before using it.
+     * If it does not exist, the interface is either not there or not implemented and the frequency is not considered to be a range.
+     * @param fp from init_device
+     * @return frequency in Hz or an error (<0)
+     */
+    long long int (*get_min_frequency)(freq_gen_single_device_t fp);
+
 	/**
 	 * set the frequency on a core/uncore
+     * If the interface provides a frequency range, it will set minimal and maximal frequency
 	 * @param fp from init_device
 	 * @param target from prepare_set_frequency
 	 * @return 0 or an error defined in errno.h
 	 */
 	int (*set_frequency)(freq_gen_single_device_t fp, freq_gen_setting_t target);
+
+    /**
+     * set the minimal frequency on a core/uncore
+     * Callers must check whether this function exists (set_min_frequency == NULL) before using it.
+     * If it does not exist, the interface is either not there or not implemented and the frequency is not considered to be a range.
+     * @param fp from init_device
+     * @param target from prepare_set_frequency
+     * @return 0 or an error defined in errno.h
+     */
+    int (*set_min_frequency)(freq_gen_single_device_t fp, freq_gen_setting_t target);
 
 	/**
 	 * free resources of a setting

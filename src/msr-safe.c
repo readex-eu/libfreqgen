@@ -18,7 +18,7 @@
 #include <errno.h>
 
 #include "freq_gen_internal.h"
-#include "freq_gen_internal_uncore.h"
+#include "freq_gen_internal_generic.h"
 
 /* some definitions to parse cpuid */
 #define STEPPING(eax) (eax & 0xF)
@@ -404,7 +404,7 @@ static int freq_gen_msr_set_frequency(freq_gen_single_device_t fp, freq_gen_sett
 		return -result;
 }
 
-/* will write the frequency to the MSR */
+/* will get the frequency from the MSR */
 static long long int freq_gen_msr_get_frequency_uncore(freq_gen_single_device_t fp)
 {
 	long long int setting = 0;
@@ -414,6 +414,18 @@ static long long int freq_gen_msr_get_frequency_uncore(freq_gen_single_device_t 
 		return (setting&0x77)*100000000;
 	else
 		return -EIO;
+}
+
+/* will get the minimal frequency from the MSR */
+static long long int freq_gen_msr_get_min_frequency_uncore(freq_gen_single_device_t fp)
+{
+    long long int setting = 0;
+    int result=pread(fp,&setting,8,UNCORE_RATIO_LIMIT);
+
+    if (result==8)
+        return ((setting<<8)&0x77)*100000000;
+    else
+        return -EIO;
 }
 
 
@@ -433,6 +445,23 @@ static int freq_gen_msr_set_frequency_uncore(freq_gen_single_device_t fp, freq_g
 		return 0;
 	else
 		return EIO;
+}
+
+/* will write the uncore frequency to min/max fields of the MSR */
+static int freq_gen_msr_set_min_frequency_uncore(freq_gen_single_device_t fp, freq_gen_setting_t setting_in)
+{
+    long long int setting = 0;
+    long long int * setting_in_lli = (long long int *) setting_in;
+    int result=pread(fp,&setting,8,UNCORE_RATIO_LIMIT);
+    if ( result != 8 )
+        return EIO;
+    setting=setting & 0xFFFFFFFFFFFF00FF;
+    setting = setting | ( *setting_in_lli & 0xFF00 );
+    result=pwrite(fp,&setting,8,UNCORE_RATIO_LIMIT);
+    if ( result==8 )
+        return 0;
+    else
+        return EIO;
 }
 
 /* frees datastructures that are prepared via freq_gen_msr_prepare_access(_uncore) */
@@ -456,8 +485,10 @@ static freq_gen_interface_t freq_gen_msr_cpu_interface =
 		.init_device = freq_gen_msr_device_init,
 		.get_num_devices = freq_gen_msr_get_max_entries,
 		.prepare_set_frequency = freq_gen_msr_prepare_access,
-		.get_frequency =freq_gen_msr_get_frequency,
+		.get_frequency = freq_gen_msr_get_frequency,
+        .get_min_frequency = NULL,
 		.set_frequency = freq_gen_msr_set_frequency,
+        .set_min_frequency = NULL,
 		.unprepare_set_frequency = freq_gen_msr_unprepare_access,
 		.close_device = freq_gen_msr_close_file,
 		.finalize=freq_gen_msr_finalize
@@ -470,7 +501,9 @@ static freq_gen_interface_t freq_gen_msr_uncore_interface =
 		.get_num_devices = freq_gen_get_num_uncore,
 		.prepare_set_frequency = freq_gen_msr_prepare_access_uncore,
 		.get_frequency =freq_gen_msr_get_frequency_uncore,
+        .get_min_frequency =freq_gen_msr_get_min_frequency_uncore,
 		.set_frequency = freq_gen_msr_set_frequency_uncore,
+        .set_min_frequency = freq_gen_msr_set_min_frequency_uncore,
 		.unprepare_set_frequency = freq_gen_msr_unprepare_access,
 		.close_device = freq_gen_msr_close_file,
 		.finalize=freq_gen_msr_finalize

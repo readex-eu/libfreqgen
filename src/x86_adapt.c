@@ -235,6 +235,16 @@ static long long int freq_gen_x86_get_frequency_uncore(freq_gen_single_device_t 
 		return -EIO;
 }
 
+static long long int freq_gen_x86_get_min_frequency_uncore(freq_gen_single_device_t fp)
+{
+    uint64_t frequency;
+    int result=x86_adapt_get_setting((int)fp,xa_index_uncore_low,&frequency);
+    if (result==8)
+        return frequency * 100000000;
+    else
+        return -EIO;
+}
+
 static int freq_gen_x86_set_frequency_uncore(freq_gen_single_device_t fp, freq_gen_setting_t setting_in)
 {
 	unsigned long long * target= (unsigned long long* ) setting_in;
@@ -244,6 +254,16 @@ static int freq_gen_x86_set_frequency_uncore(freq_gen_single_device_t fp, freq_g
 		return 0;
 	else
 		return EIO;
+}
+
+static int freq_gen_x86_set_min_frequency_uncore(freq_gen_single_device_t fp, freq_gen_setting_t setting_in)
+{
+    unsigned long long * target= (unsigned long long* ) setting_in;
+    int result=x86_adapt_set_setting((int)fp,xa_index_uncore_low,*target);
+    if ( result==8 )
+        return 0;
+    else
+        return EIO;
 }
 
 static void freq_gen_x86a_unprepare_access(freq_gen_setting_t setting_in)
@@ -286,7 +306,9 @@ static freq_gen_interface_t freq_gen_x86a_cpu_interface =
 		.get_num_devices = freq_gen_x86a_get_max_cpus,
 		.prepare_set_frequency = freq_gen_x86a_prepare_access,
 		.get_frequency = freq_gen_x86_get_frequency,
+        .get_min_frequency = NULL,
 		.set_frequency = freq_gen_x86_set_frequency,
+        .set_min_frequency = NULL,
 		.unprepare_set_frequency = freq_gen_x86a_unprepare_access,
 		.close_device = freq_gen_x86a_close_file,
 		.finalize = freq_gen_x86a_finalize_core
@@ -310,7 +332,9 @@ static freq_gen_interface_t freq_gen_x86a_uncore_interface =
 		.get_num_devices = freq_gen_x86a_get_max_cpus_uncore,
 		.prepare_set_frequency = freq_gen_x86a_prepare_access,
 		.get_frequency = freq_gen_x86_get_frequency_uncore,
+        .get_min_frequency = freq_gen_x86_get_min_frequency_uncore,
 		.set_frequency = freq_gen_x86_set_frequency_uncore,
+        .set_min_frequency = freq_gen_x86_set_min_frequency_uncore,
 		.unprepare_set_frequency = freq_gen_x86a_unprepare_access,
 		.close_device = freq_gen_x86a_close_file_uncore,
 		.finalize = freq_gen_x86a_finalize_uncore

@@ -302,7 +302,7 @@ static freq_gen_single_device_t freq_gen_msr_device_init( int cpu_id )
 	/* get uncore msr */
 
 	if ( snprintf(buffer,BUFFER_SIZE,"/dev/cpu/%d/msr",cpu_id) == BUFFER_SIZE )
-		return ENOMEM;
+		return -ENOMEM;
 
 	int fd = open(buffer, O_RDWR);
 	if ( fd < 0 )

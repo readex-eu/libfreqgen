@@ -10,12 +10,15 @@
 
 #include "../include/freq_gen.h"
 
- /** default buffer size, e.g. for file pathes */
-#define  BUFFER_SIZE 4096
+/** default buffer size, e.g. for file pathes */
+#define BUFFER_SIZE 4096
 
-typedef struct{
-	freq_gen_interface_t * (*init_cpufreq)( void ); /**< initialize core frequency changes, can be set to NULL if non-existant */
-	freq_gen_interface_t * (*init_uncorefreq)( void ); /**< initialize uncore frequency changes, can be set to NULL if non-existant */
+typedef struct
+{
+    freq_gen_interface_t* (*init_cpufreq)(
+        void); /**< initialize core frequency changes, can be set to NULL if non-existant */
+    freq_gen_interface_t* (*init_uncorefreq)(
+        void); /**< initialize uncore frequency changes, can be set to NULL if non-existant */
 } freq_gen_interface_internal_t;
 
 /* a number of implementations */

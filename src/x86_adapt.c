@@ -193,6 +193,17 @@ static freq_gen_setting_t freq_gen_x86a_prepare_access(long long int target, int
     return setting;
 }
 
+static freq_gen_setting_t freq_gen_x86a_prepare_access_uncore(long long int target, int turbo)
+{
+    unsigned long long* setting = malloc(sizeof(unsigned long long));
+    if (setting == NULL)
+    {
+        return NULL;
+    }
+    *setting = (target / 100000000);
+    return setting;
+}
+
 static long long int freq_gen_x86_get_frequency(freq_gen_single_device_t fp)
 {
     uint64_t frequency;
@@ -264,6 +275,11 @@ static void freq_gen_x86a_unprepare_access(freq_gen_setting_t setting_in)
     free(setting_in);
 }
 
+static void freq_gen_x86a_unprepare_access_uncore(freq_gen_setting_t setting_in)
+{
+    free(setting_in);
+}
+
 static void freq_gen_x86a_close_file(int cpu_nr, freq_gen_single_device_t fp)
 {
     x86_adapt_put_device(X86_ADAPT_CPU, cpu_nr);
@@ -320,12 +336,12 @@ static freq_gen_interface_t freq_gen_x86a_uncore_interface = {
     .name = "x86_adapt",
     .init_device = freq_gen_x86a_init_uncore_device,
     .get_num_devices = freq_gen_x86a_get_max_cpus_uncore,
-    .prepare_set_frequency = freq_gen_x86a_prepare_access,
+    .prepare_set_frequency = freq_gen_x86a_prepare_access_uncore,
     .get_frequency = freq_gen_x86_get_frequency_uncore,
     .get_min_frequency = freq_gen_x86_get_min_frequency_uncore,
     .set_frequency = freq_gen_x86_set_frequency_uncore,
     .set_min_frequency = freq_gen_x86_set_min_frequency_uncore,
-    .unprepare_set_frequency = freq_gen_x86a_unprepare_access,
+    .unprepare_set_frequency = freq_gen_x86a_unprepare_access_uncore,
     .close_device = freq_gen_x86a_close_file_uncore,
     .finalize = freq_gen_x86a_finalize_uncore
 };

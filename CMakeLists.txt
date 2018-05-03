@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1)
 project(freqgen)
 
 option(GIT_UPDATE_SUBMODULES "Automatically update git submodules during CMake run" ON)
@@ -35,6 +35,7 @@ endif()
 include_directories(include)
 add_library(freqgen SHARED ${SOURCES})
 set_target_properties(freqgen PROPERTIES PUBLIC_HEADER "include/freq_gen.h;include/freqgen.h")
+target_compile_features(freqgen PUBLIC c_std_11)
 
 if (X86Adapt_FOUND)
     target_link_libraries(freqgen ${X86_ADAPT_LIBRARIES})

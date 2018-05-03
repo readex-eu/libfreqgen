@@ -130,6 +130,7 @@ static int freq_gen_x86a_init_uncore(void)
 {
     int ret = 0;
 
+    check_processor();
     /* initialize */
     if (!already_initialized)
         ret = x86_adapt_init();

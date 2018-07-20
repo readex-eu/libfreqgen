@@ -252,7 +252,7 @@ static void ignore()
 {
 }
 
-static freq_gen_interface_t sysfs_interface = {.name = "sysfs-entries",
+static freq_gen_interface_t sysfs_interface = {.name = "sysfs",
                                                .init_device = freq_gen_sysfs_init_device,
                                                .get_num_devices =
                                                    freq_gen_sysfs_get_max_sysfs_entries,
@@ -278,6 +278,7 @@ static freq_gen_interface_t* freq_gen_init_cpufreq(void)
 }
 
 freq_gen_interface_internal_t freq_gen_sysfs_interface_internal = {
-    .init_cpufreq = freq_gen_init_cpufreq, .init_uncorefreq = NULL
-
+    .name = "sysfs",
+    .init_cpufreq = freq_gen_init_cpufreq,
+    .init_uncorefreq = NULL
 };

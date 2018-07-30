@@ -11,6 +11,7 @@
 #include <stddef.h>
 
 #include "freq_gen_internal.h"
+#include "../include/error.h"
 
 /* store previously set core and uncore to be able to iterate through them */
 static int previous_core = -1;
@@ -60,6 +61,7 @@ freq_gen_interface_t* freq_gen_init(freq_gen_dev_type type)
         /* so that we can start again next time */
         if (previous_core >= nr_avail)
             previous_core = -1;
+        LIBFREQGEN_SET_ERROR("could not find selected device with CORE FREQ");
         return NULL;
 
     case FREQ_GEN_DEVICE_UNCORE_FREQ:
@@ -78,9 +80,11 @@ freq_gen_interface_t* freq_gen_init(freq_gen_dev_type type)
         /* so that we can start again next time */
         if (previous_uncore >= nr_avail)
             previous_uncore = -1;
+        LIBFREQGEN_SET_ERROR("could not find selected device with UNCORE FREQ");
         return NULL;
 
     default:
+    	LIBFREQGEN_SET_ERROR("unsupported device type %d", type);
         return NULL;
     }
 }

@@ -358,6 +358,7 @@ static freq_gen_interface_t* freq_gen_x86a_init_uncorefreq(void)
 }
 
 freq_gen_interface_internal_t freq_gen_x86a_interface_internal = {
-    .init_cpufreq = freq_gen_x86a_init_cpufreq, .init_uncorefreq = freq_gen_x86a_init_uncorefreq
-
+    .name = "x86_adapt",
+    .init_cpufreq = freq_gen_x86a_init_cpufreq,
+    .init_uncorefreq = freq_gen_x86a_init_uncorefreq
 };

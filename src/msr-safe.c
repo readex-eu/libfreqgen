@@ -482,7 +482,7 @@ static void freq_gen_msr_finalize()
 }
 
 static freq_gen_interface_t freq_gen_msr_cpu_interface = {
-    .name = "msrsafe-entries",
+    .name = "msr",
     .init_device = freq_gen_msr_device_init,
     .get_num_devices = freq_gen_msr_get_max_entries,
     .prepare_set_frequency = freq_gen_msr_prepare_access,
@@ -496,7 +496,7 @@ static freq_gen_interface_t freq_gen_msr_cpu_interface = {
 };
 
 static freq_gen_interface_t freq_gen_msr_uncore_interface = {
-    .name = "msrsafe-entries",
+    .name = "msr",
     .init_device = freq_gen_msr_device_init_uncore,
     .get_num_devices = freq_gen_get_num_uncore,
     .prepare_set_frequency = freq_gen_msr_prepare_access_uncore,
@@ -509,6 +509,8 @@ static freq_gen_interface_t freq_gen_msr_uncore_interface = {
     .finalize = freq_gen_msr_finalize
 };
 
-freq_gen_interface_internal_t freq_gen_msr_interface_internal = {.init_cpufreq = freq_gen_msr_init,
-                                                                 .init_uncorefreq =
-                                                                     freq_gen_msr_init_uncore };
+freq_gen_interface_internal_t freq_gen_msr_interface_internal = {
+    .name = "msr",
+    .init_cpufreq = freq_gen_msr_init,
+    .init_uncorefreq = freq_gen_msr_init_uncore
+};

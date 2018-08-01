@@ -371,7 +371,7 @@ static void freq_gen_likwid_finalize()
 }
 
 static freq_gen_interface_t freq_gen_likwid_cpu_interface = {
-    .name = "likwid-entries",
+    .name = "likwid",
     .init_device = freq_gen_likwid_device_init,
     .get_num_devices = freq_gen_likwid_get_max_entries,
     .prepare_set_frequency = freq_gen_likwid_prepare_access,
@@ -385,7 +385,7 @@ static freq_gen_interface_t freq_gen_likwid_cpu_interface = {
 };
 
 static freq_gen_interface_t freq_gen_likwid_uncore_interface = {
-    .name = "likwid-entries",
+    .name = "likwid",
     .init_device = freq_gen_likwid_device_init_uncore,
     .get_num_devices = freq_gen_get_num_uncore,
     .prepare_set_frequency = freq_gen_likwid_prepare_access_uncore,
@@ -399,5 +399,7 @@ static freq_gen_interface_t freq_gen_likwid_uncore_interface = {
 };
 
 freq_gen_interface_internal_t freq_gen_likwid_interface_internal = {
-    .init_cpufreq = freq_gen_likwid_init, .init_uncorefreq = freq_gen_likwid_init_uncore
+    .name = "likwid",
+    .init_cpufreq = freq_gen_likwid_init,
+    .init_uncorefreq = freq_gen_likwid_init_uncore
 };

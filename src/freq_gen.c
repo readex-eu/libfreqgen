@@ -11,7 +11,8 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdbool.h>
-
+#include <string.h>
+#include <stdlib.h>
 #include "freq_gen_internal.h"
 
 /* store previously set core and uncore to be able to iterate through them */
@@ -32,6 +33,8 @@ static bool is_selected_core_interface(char * name)
         return true;
     if (strcmp(name,core_interface) == 0)
         return true;
+    else
+        return false;
 }
 
 static bool is_selected_uncore_interface(char * name)
@@ -48,6 +51,8 @@ static bool is_selected_uncore_interface(char * name)
         return true;
     if (strcmp(name,uncore_interface) == 0)
         return true;
+    else
+        return false;
 }
 
 freq_gen_interface_t* freq_gen_init(freq_gen_dev_type type)

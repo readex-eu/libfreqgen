@@ -6,7 +6,9 @@
  *  Created on: 26.01.2018
  *      Author: rschoene
  */
-
+#define _POSIX_C_SOURCE 200809L
+#define _DEFAULT_SOURCE
+#define _BSD_SOURCE
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -42,7 +44,7 @@ static int is_newer = 1;
 static inline void cpuid(unsigned int* eax, unsigned int* ebx, unsigned int* ecx, unsigned int* edx)
 {
     /* ecx is often an input as well as an output. */
-    asm volatile("cpuid" : "=a"(*eax), "=b"(*ebx), "=c"(*ecx), "=d"(*edx) : "0"(*eax), "2"(*ecx));
+    __asm__ volatile("cpuid" : "=a"(*eax), "=b"(*ebx), "=c"(*ecx), "=d"(*edx) : "0"(*eax), "2"(*ecx));
 }
 
 /* check whether frequency scaling for the current CPU is supported

@@ -5,7 +5,9 @@
  *  Created on: 26.01.2018
  *      Author: rschoene
  */
-
+#define _POSIX_C_SOURCE 200809L
+#define _DEFAULT_SOURCE
+#define _BSD_SOURCE
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>

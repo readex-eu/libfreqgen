@@ -181,7 +181,8 @@ static freq_gen_setting_t freq_gen_likwid_prepare_access(long long target, int t
 {
     uint64_t current_u = 0;
     target = target / 1000;
-    char* token = strtok(avail_freqs, " ");
+    char* temp_freqs = strdup(avail_freqs);
+    char* token = strtok(temp_freqs, " ");
     char* end;
     while (token != NULL)
     {

@@ -137,7 +137,7 @@ static freq_gen_setting_t freq_gen_likwid_prepare_access(long long target , int 
     target = target / 1000;
     char* temp_freqs = strdup(avail_freqs);
     if ( temp_freqs == NULL )
-      return NULL;
+        return NULL;
     char* token = strtok(temp_freqs, " ");
     char* end;
     while (token != NULL)
@@ -152,6 +152,7 @@ static freq_gen_setting_t freq_gen_likwid_prepare_access(long long target , int 
         }
         token++;
     }
+    free( temp_freqs );
     uint64_t * setting = malloc(sizeof(double));
     *setting=(current_u);
     return setting;

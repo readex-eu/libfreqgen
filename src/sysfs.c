@@ -207,14 +207,14 @@ static freq_gen_setting_t freq_gen_prepare_sysfs_access(long long int target, in
     struct setting_s* setting = malloc(sizeof(struct setting_s));
     if (setting == NULL)
     {
-    	LIBFREQGEN("could not allocate %d bytes of memory for a struct setting_s", sizeof(struct setting_s));
+    	LIBFREQGEN_SET_ERROR("could not allocate %d bytes of memory for a struct setting_s", sizeof(struct setting_s));
         return NULL;
     }
     setting->string = strdup(buffer);
     if (setting->string == NULL)
     {
         free(setting);
-        LIBFREQGEN("could not strdup \"%100s\"", buffer);
+        LIBFREQGEN_SET_ERROR("could not strdup \"%100s\"", buffer);
         return NULL;
     }
     setting->len = strlen(buffer);
@@ -238,7 +238,7 @@ static long long int freq_gen_sysfs_get_frequency(freq_gen_single_device_t fp)
     int result = pread((int)fp, buffer, BUFFER_SIZE, 0);
     if (result < 0)
     {
-    	LIBFREQGEN("I/O-Error could not read from file pointer (%d)", (int) fp);
+    	LIBFREQGEN_SET_ERROR("I/O-Error could not read from file pointer (%d)", (int) fp);
         return result;
     }
     char* tail;
@@ -250,7 +250,7 @@ static long long int freq_gen_sysfs_get_frequency(freq_gen_single_device_t fp)
     }
     else
     {
-    	LIBFREQGEN("invalid contents of file, expected a long long, but got: %100s", buffer);
+    	LIBFREQGEN_SET_ERROR("invalid contents of file, expected a long long, but got: %100s", buffer);
         return -EIO;
     }
 }
@@ -266,7 +266,7 @@ static int freq_gen_sysfs_set_frequency(freq_gen_single_device_t fp, freq_gen_se
         return 0;
     else
     {
-    	LIBFREQGEN("could not write frequency \"%s\"", target->string);
+    	LIBFREQGEN_SET_ERROR("could not write frequency \"%s\"", target->string);
         return EIO;
     }
 }

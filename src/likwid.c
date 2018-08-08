@@ -48,11 +48,6 @@ static int freq_gen_likwid_get_max_entries()
     {
         return max;
     }
-
-    if ( max != -1 )
-    {
-	    return max;
-    }
     max = topo->numHWThreads;
     if ( max == 0 )
     {

@@ -6,7 +6,9 @@
  *  Created on: 26.01.2018
  *      Author: rschoene
  */
-
+#define _POSIX_C_SOURCE 200809L
+#define _DEFAULT_SOURCE
+#define _BSD_SOURCE
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -44,7 +46,7 @@ static int is_newer = 1;
 static inline void cpuid(unsigned int* eax, unsigned int* ebx, unsigned int* ecx, unsigned int* edx)
 {
     /* ecx is often an input as well as an output. */
-    asm volatile("cpuid" : "=a"(*eax), "=b"(*ebx), "=c"(*ecx), "=d"(*edx) : "0"(*eax), "2"(*ecx));
+    __asm__ volatile("cpuid" : "=a"(*eax), "=b"(*ebx), "=c"(*ecx), "=d"(*edx) : "0"(*eax), "2"(*ecx));
 }
 
 /* check whether frequency scaling for the current CPU is supported
@@ -555,7 +557,7 @@ static void freq_gen_msr_finalize()
 }
 
 static freq_gen_interface_t freq_gen_msr_cpu_interface = {
-    .name = "msrsafe-entries",
+    .name = "msr",
     .init_device = freq_gen_msr_device_init,
     .get_num_devices = freq_gen_msr_get_max_entries,
     .prepare_set_frequency = freq_gen_msr_prepare_access,
@@ -569,7 +571,7 @@ static freq_gen_interface_t freq_gen_msr_cpu_interface = {
 };
 
 static freq_gen_interface_t freq_gen_msr_uncore_interface = {
-    .name = "msrsafe-entries",
+    .name = "msr",
     .init_device = freq_gen_msr_device_init_uncore,
     .get_num_devices = freq_gen_get_num_uncore,
     .prepare_set_frequency = freq_gen_msr_prepare_access_uncore,
@@ -582,6 +584,8 @@ static freq_gen_interface_t freq_gen_msr_uncore_interface = {
     .finalize = freq_gen_msr_finalize
 };
 
-freq_gen_interface_internal_t freq_gen_msr_interface_internal = {.init_cpufreq = freq_gen_msr_init,
-                                                                 .init_uncorefreq =
-                                                                     freq_gen_msr_init_uncore };
+freq_gen_interface_internal_t freq_gen_msr_interface_internal = {
+    .name = "msr",
+    .init_cpufreq = freq_gen_msr_init,
+    .init_uncorefreq = freq_gen_msr_init_uncore
+};

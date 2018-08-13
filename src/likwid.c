@@ -55,7 +55,9 @@ static int freq_gen_likwid_get_max_entries()
  */
 static freq_gen_interface_t* freq_gen_likwid_init(void)
 {
+#ifdef LIKWID_DEBUG
     printf("[LIKWID:%d] LIKWID Initializing \n", getpid());
+#endif
     if (!initialized)
     {
         int err = topology_init();
@@ -67,12 +69,16 @@ static freq_gen_interface_t* freq_gen_likwid_init(void)
         }
         topo = get_cpuTopology();
         initialized = 1;
+#ifdef LIKWID_DEBUG
         printf("[LIKWID:%d] Initialized \n", getpid());
+#endif
         return &freq_gen_likwid_cpu_interface;
     }
     else
     {
+#ifdef LIKWID_DEBUG
         printf("[LIKWID:%d] Initialized \n", getpid());
+#endif
         return &freq_gen_likwid_cpu_interface;
     }
 }
@@ -111,13 +117,19 @@ static freq_gen_interface_t* freq_gen_likwid_init_uncore(void)
  */
 static freq_gen_single_device_t freq_gen_likwid_device_init(int cpu_id)
 {
+#ifdef LIKWID_DEBUG
     printf("[LIKWID:%d] Getting available frequencies \n", getpid());
+#endif
     if (avail_freqs == NULL)
     {
+#ifdef LIKWID_DEBUG
         printf("[LIKWID:%d] Calling freq_getAvailFreq(%d) \n", getpid(), cpu_id);
+#endif
         avail_freqs = freq_getAvailFreq(cpu_id);
     }
+#ifdef LIKWID_DEBUG
     printf("[LIKWID:%d] Available frequencies for CPU %d = %s \n", getpid(), cpu_id, avail_freqs);
+#endif
     return cpu_id;
 }
 /* will just return the uncore */
@@ -133,7 +145,9 @@ static freq_gen_single_device_t freq_gen_likwid_device_init_uncore(int uncore)
  */
 static freq_gen_setting_t freq_gen_likwid_prepare_access(long long target, int turbo)
 {
+#ifdef LIKWID_DEBUG
     printf("[LIKWID:%d] Preparing frequency setting for %lli GHz \n", getpid(), target);
+#endif
     uint64_t current_u = 0;
     target = target / 1000;
     char* temp_freqs = strdup(avail_freqs);
@@ -172,7 +186,9 @@ static freq_gen_setting_t freq_gen_likwid_prepare_access_uncore(long long target
 
 static long long int freq_gen_likwid_get_frequency(freq_gen_single_device_t fp)
 {
+#ifdef LIKWID_DEBUG
     printf("[LIKWID:%d] Call to freq_getCpuClockMax(%d) \n", getpid(), fp);
+#endif
     uint64_t frequency = freq_getCpuClockMax(fp);
     if (frequency == 0)
     {
@@ -186,7 +202,9 @@ static long long int freq_gen_likwid_get_frequency(freq_gen_single_device_t fp)
 
 static long long int freq_gen_likwid_get_min_frequency(freq_gen_single_device_t fp)
 {
+#ifdef LIKWID_DEBUG
     printf("[LIKWID:%d] Call to freq_getCpuClockMin(%d) \n", getpid(), fp);
+#endif
     uint64_t frequency = freq_getCpuClockMin(fp);
     if (frequency == 0)
     {
@@ -204,19 +222,25 @@ static long long int freq_gen_likwid_get_min_frequency(freq_gen_single_device_t 
  */
 static int freq_gen_likwid_set_frequency(freq_gen_single_device_t fp, freq_gen_setting_t setting_in)
 {
+#ifdef LIKWID_DEBUG
     printf("[LIKWID:%d] Call to set frequency for CPU %d \n", getpid(), fp);
+#endif
     uint64_t* setting = (uint64_t*)setting_in;
 #ifdef AVOID_LIKWID_BUG
     freq_setCpuClockMin(fp, *setting);
     freq_setCpuClockMax(fp, *setting);
-#else  /* AVOID_LIKWID_BUG */
+#else /* AVOID_LIKWID_BUG */
+#ifdef LIKWID_DEBUG
     printf("[LIKWID:%d] Calling freq_setCpuClockMin() \n", getpid());
+#endif
     uint64_t set_freq = freq_setCpuClockMin(fp, *setting);
     if (set_freq == 0)
     {
         return EIO;
     }
+#ifdef LIKWID_DEBUG
     printf("[LIKWID:%d] Calling freq_setCpuClockMax() \n", getpid());
+#endif
     set_freq = freq_setCpuClockMax(fp, *setting);
     if (set_freq == 0)
     {
@@ -233,12 +257,16 @@ static int freq_gen_likwid_set_frequency(freq_gen_single_device_t fp, freq_gen_s
 static int freq_gen_likwid_set_min_frequency(freq_gen_single_device_t fp,
                                              freq_gen_setting_t setting_in)
 {
+#ifdef LIKWID_DEBUG
     printf("[LIKWID:%d] Call to set minimum frequency for CPU %d\n", getpid(), fp);
+#endif
     uint64_t* setting = (uint64_t*)setting_in;
 #ifdef AVOID_LIKWID_BUG
     freq_setCpuClockMin(fp, *setting);
-#else  /* AVOID_LIKWID_BUG */
+#else /* AVOID_LIKWID_BUG */
+#ifdef LIKWID_DEBUG
     printf("[LIKWID:%d] Calling freq_setCpuClockMin() \n", getpid());
+#endif
     uint64_t set_freq = freq_setCpuClockMin(fp, *setting);
     if (set_freq == 0)
     {
@@ -250,6 +278,9 @@ static int freq_gen_likwid_set_min_frequency(freq_gen_single_device_t fp,
 
 static long long int freq_gen_likwid_get_frequency_uncore(freq_gen_single_device_t fp)
 {
+#ifdef LIKWID_DEBUG
+    printf("[LIKWID:%d] Calling freq_getUncoreFreqMax(%d) \n", getpid(), fp);
+#endif
     uint64_t frequency = freq_getUncoreFreqMax(fp);
     if (frequency == 0)
     {
@@ -263,6 +294,9 @@ static long long int freq_gen_likwid_get_frequency_uncore(freq_gen_single_device
 
 static long long int freq_gen_likwid_get_min_frequency_uncore(freq_gen_single_device_t fp)
 {
+#ifdef LIKWID_DEBUG
+    printf("[LIKWID:%d] Calling freq_getUncoreFreqMin(%d) \n", getpid(), fp);
+#endif
     uint64_t frequency = freq_getUncoreFreqMin(fp);
     if (frequency == 0)
     {
@@ -281,16 +315,25 @@ static long long int freq_gen_likwid_get_min_frequency_uncore(freq_gen_single_de
 static int freq_gen_likwid_set_frequency_uncore(freq_gen_single_device_t fp,
                                                 freq_gen_setting_t setting_in)
 {
+#ifdef LIKWID_DEBUG
+    printf("[LIKWID:%d] Call to set uncore frequency for node %d \n", getpid(), fp);
+#endif
     uint64_t* setting = (uint64_t*)setting_in;
 #ifdef AVOID_LIKWID_BUG
     freq_setUncoreFreqMin(fp, *setting);
     freq_setUncoreFreqMax(fp, *setting);
-#else  /* AVOID_LIKWID_BUG */
+#else /* AVOID_LIKWID_BUG */
+#ifdef LIKWID_DEBUG
+    printf("[LIKWID:%d] Calling freq_setUncoreFreqMin() \n", getpid());
+#endif
     uint64_t set_freq = freq_setUncoreFreqMin(fp, *setting);
     if (set_freq == 0)
     {
         return EIO;
     }
+#ifdef LIKWID_DEBUG
+    printf("[LIKWID:%d] Calling freq_setUncoreFreqMax() \n", getpid());
+#endif
     set_freq = freq_setUncoreFreqMax(fp, *setting);
     if (set_freq == 0)
     {
@@ -303,10 +346,16 @@ static int freq_gen_likwid_set_frequency_uncore(freq_gen_single_device_t fp,
 static int freq_gen_likwid_set_min_frequency_uncore(freq_gen_single_device_t fp,
                                                     freq_gen_setting_t setting_in)
 {
+#ifdef LIKWID_DEBUG
+    printf("[LIKWID:%d] Call to set min uncore frequency for node %d \n", getpid(), fp);
+#endif
     uint64_t* setting = (uint64_t*)setting_in;
 #ifdef AVOID_LIKWID_BUG
     freq_setUncoreFreqMin(fp, *setting);
-#else  /* AVOID_LIKWID_BUG */
+#else /* AVOID_LIKWID_BUG */
+#ifdef LIKWID_DEBUG
+    printf("[LIKWID:%d] Calling freq_setUncoreFreqMin() \n", getpid());
+#endif
     uint64_t set_freq = freq_setUncoreFreqMin(fp, *setting);
     if (set_freq == 0)
     {

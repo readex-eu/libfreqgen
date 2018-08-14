@@ -23,7 +23,7 @@ char * libfreqgen_error_string( void )
 }
 
 static int libfreqgen_handle_problematic_error_string( const int printf_return);
-static int libfreq_append_newline( const char * strPtr, const int maxlen);
+static int libfreqgen_append_newline( char * strPtr, const int maxlen);
 
 void libfreqgen_set_error_string(const char * error_file, const char * error_func, int error_line, const char * fmt, ... )
 {
@@ -45,7 +45,7 @@ void libfreqgen_append_error_string(const char * error_file, const char * error_
         va_start(valist, fmt);
     	libfreqgen_handle_problematic_error_string(vsnprintf(&error_string[strlen(error_string)], ERROR_LEN - strlen(error_string), fmt, valist));
         va_end(valist);
-        libfreq_append_newline(error_string, ERROR_LEN);
+        libfreqgen_append_newline(error_string, ERROR_LEN);
     }
     return;
 }
@@ -65,7 +65,7 @@ static int libfreqgen_handle_problematic_error_string( const int printf_return)
     return 0;
 }
 
-static int libfreq_append_newline(const char * strPtr, const int maxlen)
+static int libfreqgen_append_newline(char * strPtr, const int maxlen)
 {
     int old_len = strlen(strPtr);
     if(old_len + 2 < maxlen)

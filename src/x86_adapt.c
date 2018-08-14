@@ -17,7 +17,7 @@
 #include <x86_adapt.h>
 
 #include "freq_gen_internal.h"
-#include "../include/error.h"
+#include "error.h"
 
 static freq_gen_interface_t freq_gen_x86a_cpu_interface;
 static freq_gen_interface_t freq_gen_x86a_uncore_interface;

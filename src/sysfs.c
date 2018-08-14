@@ -19,7 +19,7 @@
 #include <unistd.h>
 
 #include "freq_gen_internal.h"
-#include "../include/error.h"
+#include "error.h"
 
 static freq_gen_interface_t sysfs_interface;
 

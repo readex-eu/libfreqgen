@@ -23,7 +23,7 @@
 
 #include "freq_gen_internal.h"
 #include "freq_gen_internal_generic.h"
-#include "../include/error.h"
+#include "error.h"
 
 /* implementations of the interface */
 static freq_gen_interface_t freq_gen_likwid_cpu_interface;

@@ -18,7 +18,7 @@
 #include <unistd.h>
 
 #include "freq_gen_internal.h"
-#include "../include/error.h"
+#include "error.h"
 
 /*
  * will return the max nr from /sys/devices/system/node/node(nr)

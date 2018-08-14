@@ -21,7 +21,7 @@
 
 #include "freq_gen_internal.h"
 #include "freq_gen_internal_generic.h"
-#include "../include/error.h"
+#include "error.h"
 
 /* some definitions to parse cpuid */
 #define STEPPING(eax) (eax & 0xF)

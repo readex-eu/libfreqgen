@@ -14,7 +14,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "freq_gen_internal.h"
-#include "../include/error.h"
+#include "error.h"
 
 /* store previously set core and uncore to be able to iterate through them */
 static int previous_core = -1;

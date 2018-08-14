@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+#include "error.h"
 
 #define ERROR_LEN 4096
 

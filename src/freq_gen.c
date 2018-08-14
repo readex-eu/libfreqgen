@@ -8,23 +8,23 @@
  *      Author: rschoene
  */
 
+#include "error.h"
+#include "freq_gen_internal.h"
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
 #include <stdlib.h>
-#include "freq_gen_internal.h"
-#include "error.h"
+#include <string.h>
 
 /* store previously set core and uncore to be able to iterate through them */
 static int previous_core = -1;
 static int previous_uncore = -1;
 
-static bool is_selected_core_interface(char * name)
+static bool is_selected_core_interface(char* name)
 {
     static bool selected_core_interface = false;
-    static char * core_interface = NULL;
-    if (! selected_core_interface)
+    static char* core_interface = NULL;
+    if (!selected_core_interface)
     {
         core_interface = getenv("LIBFREQGEN_CORE_INTERFACE");
         selected_core_interface = true;
@@ -32,17 +32,17 @@ static bool is_selected_core_interface(char * name)
 
     if (core_interface == NULL)
         return true;
-    if (strcmp(name,core_interface) == 0)
+    if (strcmp(name, core_interface) == 0)
         return true;
     else
         return false;
 }
 
-static bool is_selected_uncore_interface(char * name)
+static bool is_selected_uncore_interface(char* name)
 {
     static bool selected_uncore_interface = false;
-    static char * uncore_interface = NULL;
-    if (! selected_uncore_interface)
+    static char* uncore_interface = NULL;
+    if (!selected_uncore_interface)
     {
         uncore_interface = getenv("LIBFREQGEN_UNCORE_INTERFACE");
         selected_uncore_interface = true;
@@ -50,7 +50,7 @@ static bool is_selected_uncore_interface(char * name)
 
     if (uncore_interface == NULL)
         return true;
-    if (strcmp(name,uncore_interface) == 0)
+    if (strcmp(name, uncore_interface) == 0)
         return true;
     else
         return false;
@@ -123,7 +123,7 @@ freq_gen_interface_t* freq_gen_init(freq_gen_dev_type type)
         return NULL;
 
     default:
-    	LIBFREQGEN_SET_ERROR("unsupported device type %d", type);
+        LIBFREQGEN_SET_ERROR("unsupported device type %d", type);
         return NULL;
     }
 }

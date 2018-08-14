@@ -6,24 +6,21 @@
  *      Author: rschoene
  */
 
-
-
-#include <stddef.h>
-#include <unistd.h>
 #include <dirent.h>
-#include <string.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#include <stdint.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #include <likwid.h>
 
-
+#include "error.h"
 #include "freq_gen_internal.h"
 #include "freq_gen_internal_generic.h"
-#include "error.h"
 
 /* implementations of the interface */
 static freq_gen_interface_t freq_gen_likwid_cpu_interface;
@@ -49,28 +46,26 @@ static int freq_gen_likwid_get_max_entries()
         return max;
     }
     max = topo->numHWThreads;
-    if ( max == 0 )
+    if (max == 0)
     {
-            LIBFREQGEN_SET_ERROR("Could not access the number of available HW Threads");
-	    return -EACCES;
+        LIBFREQGEN_SET_ERROR("Could not access the number of available HW Threads");
+        return -EACCES;
     }
     return max;
-
 }
-
-
 
 /* will initialize the machine topology
  * If it is unable to initialize , it will set errno and return NULL
  */
-static freq_gen_interface_t* freq_gen_likwid_init( void )
+static freq_gen_interface_t* freq_gen_likwid_init(void)
 {
-    if(!initialized)
+    if (!initialized)
     {
-        int err = topology_init();	
-        if(err < 0)
+        int err = topology_init();
+        if (err < 0)
         {
-            LIBFREQGEN_SET_ERROR("Could not initialize topology module for likwid library, errorcode %d", err);
+            LIBFREQGEN_SET_ERROR(
+                "Could not initialize topology module for likwid library, errorcode %d", err);
             errno = err;
             return NULL;
         }
@@ -83,7 +78,6 @@ static freq_gen_interface_t* freq_gen_likwid_init( void )
         return &freq_gen_likwid_cpu_interface;
     }
 }
-
 
 /* will initialize the core frequency stuff
  * If it is unable to connect (HPMinit returns != 0), it will set errno and return NULL
@@ -101,7 +95,8 @@ static freq_gen_interface_t* freq_gen_likwid_init_uncore(void)
         }
         else
         {
-        	LIBFREQGEN_SET_ERROR("could not initialize HPM with HPMmode(ACCESSMODE_DAEMON), errorcode %d", ret);
+            LIBFREQGEN_SET_ERROR(
+                "could not initialize HPM with HPMmode(ACCESSMODE_DAEMON), errorcode %d", ret);
             errno = ret;
             return NULL;
         }
@@ -113,20 +108,21 @@ static freq_gen_interface_t* freq_gen_likwid_init_uncore(void)
 }
 
 /* this will read the available frequencies for the given cpu_id using likwid
- * with likwid-setFreq daemon as backend. Getting the available frequencies will only be done for the 
- * first cpu_id that is passed. 
+ * with likwid-setFreq daemon as backend. Getting the available frequencies will only be done for
+ * the
+ * first cpu_id that is passed.
  * The returned value will be used for all other CPUs
  */
 static freq_gen_single_device_t freq_gen_likwid_device_init(int cpu_id)
 {
-    if(avail_freqs == NULL)
+    if (avail_freqs == NULL)
     {
         avail_freqs = freq_getAvailFreq(cpu_id);
     }
     return cpu_id;
 }
 /* will just return the uncore */
-static freq_gen_single_device_t  freq_gen_likwid_device_init_uncore(int uncore)
+static freq_gen_single_device_t freq_gen_likwid_device_init_uncore(int uncore)
 {
     return uncore;
 }
@@ -136,33 +132,32 @@ static freq_gen_single_device_t  freq_gen_likwid_device_init_uncore(int uncore)
  * O(strlen(avail_frequencies))+ malloc
  * turbo is ignored
  */
-static freq_gen_setting_t freq_gen_likwid_prepare_access(long long target , int turbo)
+static freq_gen_setting_t freq_gen_likwid_prepare_access(long long target, int turbo)
 {
     uint64_t current_u = 0;
     target = target / 1000;
     char* temp_freqs = strdup(avail_freqs);
-    if ( temp_freqs == NULL )
+    if (temp_freqs == NULL)
         return NULL;
     char* token = strtok(temp_freqs, " ");
     char* end;
     while (token != NULL)
     {
-        double current = strtod(token, NULL)*1000;
-        current_u = (uint64_t) current;
-        current_u=current_u*1000;
+        double current = strtod(token, NULL) * 1000;
+        current_u = (uint64_t)current;
+        current_u = current_u * 1000;
         token = strpbrk(token, " ");
-        if(current_u <= target)
+        if (current_u <= target)
         {
             break;
         }
         token++;
     }
-    free( temp_freqs );
-    uint64_t * setting = malloc(sizeof(double));
-    *setting=(current_u);
+    free(temp_freqs);
+    uint64_t* setting = malloc(sizeof(double));
+    *setting = (current_u);
     return setting;
 }
-
 
 /* prepares the setting for uncore frequencies
  * O(malloc)
@@ -171,7 +166,7 @@ static freq_gen_setting_t freq_gen_likwid_prepare_access(long long target , int 
 static freq_gen_setting_t freq_gen_likwid_prepare_access_uncore(long long target, int turbo)
 {
     uint64_t* setting = malloc(sizeof(uint64_t));
-    *setting = (target/1000000);
+    *setting = (target / 1000000);
     return setting;
 }
 
@@ -180,12 +175,12 @@ static long long int freq_gen_likwid_get_frequency(freq_gen_single_device_t fp)
     uint64_t frequency = freq_getCpuClockMax(fp);
     if (frequency == 0)
     {
-    	LIBFREQGEN_SET_ERROR("could not get cpu clock max, I/O-Error");
+        LIBFREQGEN_SET_ERROR("could not get cpu clock max, I/O-Error");
         return -EIO;
     }
     else
     {
-        return (long long) frequency;
+        return (long long)frequency;
     }
 }
 
@@ -194,12 +189,12 @@ static long long int freq_gen_likwid_get_min_frequency(freq_gen_single_device_t 
     uint64_t frequency = freq_getCpuClockMin(fp);
     if (frequency == 0)
     {
-    	LIBFREQGEN_SET_ERROR("could not get cpu clock min, I/O-Error");
+        LIBFREQGEN_SET_ERROR("could not get cpu clock min, I/O-Error");
         return -EIO;
     }
     else
     {
-        return (long long) frequency;
+        return (long long)frequency;
     }
 }
 
@@ -209,21 +204,21 @@ static long long int freq_gen_likwid_get_min_frequency(freq_gen_single_device_t 
  */
 static int freq_gen_likwid_set_frequency(freq_gen_single_device_t fp, freq_gen_setting_t setting_in)
 {
-    uint64_t* setting = (uint64_t *) setting_in;
+    uint64_t* setting = (uint64_t*)setting_in;
 #ifdef AVOID_LIKWID_BUG
     freq_setCpuClockMin(fp, *setting);
     freq_setCpuClockMax(fp, *setting);
-#else /* AVOID_LIKWID_BUG */
+#else  /* AVOID_LIKWID_BUG */
     uint64_t set_freq = freq_setCpuClockMin(fp, *setting);
     if (set_freq == 0)
     {
-    	LIBFREQGEN_SET_ERROR("could not set min frequency %d, I/O-Error", *setting);
+        LIBFREQGEN_SET_ERROR("could not set min frequency %d, I/O-Error", *setting);
         return EIO;
     }
     set_freq = freq_setCpuClockMax(fp, *setting);
     if (set_freq == 0)
     {
-    	LIBFREQGEN_SET_ERROR("could not set max frequency %d, I/O-Error", *setting);
+        LIBFREQGEN_SET_ERROR("could not set max frequency %d, I/O-Error", *setting);
         return EIO;
     }
 #endif /* AVOID_LIKWID_BUG */
@@ -234,16 +229,17 @@ static int freq_gen_likwid_set_frequency(freq_gen_single_device_t fp, freq_gen_s
  * O(freq_setCpuClockMin)+O(freq_setCpuClockMax)
  * If AVOID_LIKWID_BUG is activated during compilation, return codes are not checked
  */
-static int freq_gen_likwid_set_min_frequency(freq_gen_single_device_t fp, freq_gen_setting_t setting_in)
+static int freq_gen_likwid_set_min_frequency(freq_gen_single_device_t fp,
+                                             freq_gen_setting_t setting_in)
 {
-    uint64_t* setting = (uint64_t *) setting_in;
+    uint64_t* setting = (uint64_t*)setting_in;
 #ifdef AVOID_LIKWID_BUG
     freq_setCpuClockMin(fp, *setting);
-#else /* AVOID_LIKWID_BUG */
+#else  /* AVOID_LIKWID_BUG */
     uint64_t set_freq = freq_setCpuClockMin(fp, *setting);
     if (set_freq == 0)
     {
-    	LIBFREQGEN_SET_ERROR("could not set min frequency %d, I/O-Error", *setting);
+        LIBFREQGEN_SET_ERROR("could not set min frequency %d, I/O-Error", *setting);
         return EIO;
     }
 #endif /* AVOID_LIKWID_BUG */
@@ -252,10 +248,10 @@ static int freq_gen_likwid_set_min_frequency(freq_gen_single_device_t fp, freq_g
 
 static long long int freq_gen_likwid_get_frequency_uncore(freq_gen_single_device_t fp)
 {
-    uint64_t frequency = freq_getUncoreFreqMax( fp );
+    uint64_t frequency = freq_getUncoreFreqMax(fp);
     if (frequency == 0)
     {
-    	LIBFREQGEN_SET_ERROR("could not get max uncore frequency, I/O-Error");
+        LIBFREQGEN_SET_ERROR("could not get max uncore frequency, I/O-Error");
         return -EIO;
     }
     else
@@ -266,10 +262,10 @@ static long long int freq_gen_likwid_get_frequency_uncore(freq_gen_single_device
 
 static long long int freq_gen_likwid_get_min_frequency_uncore(freq_gen_single_device_t fp)
 {
-    uint64_t frequency = freq_getUncoreFreqMin( fp );
+    uint64_t frequency = freq_getUncoreFreqMin(fp);
     if (frequency == 0)
     {
-    	LIBFREQGEN_SET_ERROR("could not get min uncore frequency, I/O-Error");
+        LIBFREQGEN_SET_ERROR("could not get min uncore frequency, I/O-Error");
         return -EIO;
     }
     else
@@ -282,39 +278,41 @@ static long long int freq_gen_likwid_get_min_frequency_uncore(freq_gen_single_de
  * O(freq_setUncoreFreqMin)+O(freq_setUncoreFreqMax)
  * If AVOID_LIKWID_BUG is activated during compilation, return codes are not checked
  */
-static int freq_gen_likwid_set_frequency_uncore(freq_gen_single_device_t fp, freq_gen_setting_t setting_in)
+static int freq_gen_likwid_set_frequency_uncore(freq_gen_single_device_t fp,
+                                                freq_gen_setting_t setting_in)
 {
-    uint64_t * setting = (uint64_t *) setting_in;
+    uint64_t* setting = (uint64_t*)setting_in;
 #ifdef AVOID_LIKWID_BUG
     freq_setUncoreFreqMin(fp, *setting);
     freq_setUncoreFreqMax(fp, *setting);
-#else /* AVOID_LIKWID_BUG */
+#else  /* AVOID_LIKWID_BUG */
     uint64_t set_freq = freq_setUncoreFreqMin(fp, *setting);
-    if ( set_freq == 0 )
+    if (set_freq == 0)
     {
-    	LIBFREQGEN_SET_ERROR("could not set min uncore frequency %d, I/O-Error", *setting);
+        LIBFREQGEN_SET_ERROR("could not set min uncore frequency %d, I/O-Error", *setting);
         return EIO;
     }
     set_freq = freq_setUncoreFreqMax(fp, *setting);
-    if ( set_freq == 0 )
+    if (set_freq == 0)
     {
-    	LIBFREQGEN_SET_ERROR("could not set max uncore frequency %d, I/O-Error", *setting);
+        LIBFREQGEN_SET_ERROR("could not set max uncore frequency %d, I/O-Error", *setting);
         return EIO;
     }
 #endif /* AVOID_LIKWID_BUG */
     return 0;
 }
 
-static int freq_gen_likwid_set_min_frequency_uncore(freq_gen_single_device_t fp, freq_gen_setting_t setting_in)
+static int freq_gen_likwid_set_min_frequency_uncore(freq_gen_single_device_t fp,
+                                                    freq_gen_setting_t setting_in)
 {
-    uint64_t* setting = (uint64_t*) setting_in;
+    uint64_t* setting = (uint64_t*)setting_in;
 #ifdef AVOID_LIKWID_BUG
     freq_setUncoreFreqMin(fp, *setting);
-#else /* AVOID_LIKWID_BUG */
+#else  /* AVOID_LIKWID_BUG */
     uint64_t set_freq = freq_setUncoreFreqMin(fp, *setting);
     if (set_freq == 0)
     {
-    	LIBFREQGEN_SET_ERROR("could not set min uncore frequency %d, I/O-Error", *setting);
+        LIBFREQGEN_SET_ERROR("could not set min uncore frequency %d, I/O-Error", *setting);
         return EIO;
     }
 #endif /* AVOID_LIKWID_BUG */
@@ -328,7 +326,9 @@ static void freq_gen_likwid_unprepare_access(freq_gen_setting_t setting)
 }
 
 /* The daemon will do it, so nothing to do here **/
-static void freq_gen_likwid_do_nothing(freq_gen_single_device_t fd, int cpu) {}
+static void freq_gen_likwid_do_nothing(freq_gen_single_device_t fd, int cpu)
+{
+}
 
 /* close connection to access daemon and free some data structures **/
 static void freq_gen_likwid_finalize()
@@ -348,7 +348,7 @@ static freq_gen_interface_t freq_gen_likwid_cpu_interface = {
     .set_min_frequency = freq_gen_likwid_set_min_frequency,
     .unprepare_set_frequency = freq_gen_likwid_unprepare_access,
     .close_device = freq_gen_likwid_do_nothing,
-    .finalize=freq_gen_likwid_finalize
+    .finalize = freq_gen_likwid_finalize
 };
 
 static freq_gen_interface_t freq_gen_likwid_uncore_interface = {
@@ -362,7 +362,7 @@ static freq_gen_interface_t freq_gen_likwid_uncore_interface = {
     .set_min_frequency = freq_gen_likwid_set_min_frequency_uncore,
     .unprepare_set_frequency = freq_gen_likwid_unprepare_access,
     .close_device = freq_gen_likwid_do_nothing,
-    .finalize=freq_gen_likwid_do_nothing
+    .finalize = freq_gen_likwid_do_nothing
 };
 
 freq_gen_interface_internal_t freq_gen_likwid_interface_internal = {

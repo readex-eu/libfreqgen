@@ -17,8 +17,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "freq_gen_internal.h"
 #include "error.h"
+#include "freq_gen_internal.h"
 
 static int read_file_long(char* file, long int* result)
 {
@@ -26,14 +26,14 @@ static int read_file_long(char* file, long int* result)
     int fd = open(file, O_RDONLY);
     if (fd < 0)
     {
-        fprintf(stderr, "Could not open %s",file );
+        fprintf(stderr, "Could not open %s", file);
         return 1;
     }
     int read_bytes = read(fd, buffer, 2048);
     close(fd);
     if (read_bytes < 0)
     {
-        fprintf(stderr, "Could not read %s",file );
+        fprintf(stderr, "Could not read %s", file);
         return 1;
     }
     char* endptr;
@@ -47,7 +47,7 @@ static int read_file_long_list(char* file, long int** result, int* length)
     int fd = open(file, O_RDONLY);
     if (fd < 0)
     {
-        fprintf(stderr, "Could not open %s",file );
+        fprintf(stderr, "Could not open %s", file);
         return 1;
     }
     int read_bytes = read(fd, buffer, 2048);
@@ -55,12 +55,12 @@ static int read_file_long_list(char* file, long int** result, int* length)
     /* would need larger buffer */
     if (read_bytes == 2048)
     {
-        fprintf(stderr, "Could not read %s (insufficient buffer)",file );
+        fprintf(stderr, "Could not read %s (insufficient buffer)", file);
         return 1;
     }
     if (read_bytes < 0)
     {
-        fprintf(stderr, "Could not read %s",file );
+        fprintf(stderr, "Could not read %s", file);
         return 1;
     }
     int end_of_text = read_bytes - 1;
@@ -71,21 +71,20 @@ static int read_file_long_list(char* file, long int** result, int* length)
     char* current_ptr = buffer;
     char* next_ptr = NULL;
 
-
     /*as long as strtol returns something valid, either !=0 or 0 with errno==0 */
-    while ( 1 )
+    while (1)
     {
         errno = 0;
-        long int read_cpu = strtol( current_ptr, &next_ptr, 10 );
-        if ( next_ptr == current_ptr || errno !=0 )
+        long int read_cpu = strtol(current_ptr, &next_ptr, 10);
+        if (next_ptr == current_ptr || errno != 0)
         {
-            fprintf(stderr, "Could not read next CPU: %s",current_ptr );
+            fprintf(stderr, "Could not read next CPU: %s", current_ptr);
             free(*result);
             *result = NULL;
             *length = 0;
             return 1;
         }
-        switch ( *next_ptr )
+        switch (*next_ptr)
         {
         /* add cpu */
         case ',':
@@ -93,7 +92,7 @@ static int read_file_long_list(char* file, long int** result, int* length)
             long int* tmp = realloc(*result, ((*length) + 1) * sizeof(**result));
             if (!tmp)
             {
-                fprintf(stderr, "Could not realloc for CPUs" );
+                fprintf(stderr, "Could not realloc for CPUs");
                 free(*result);
                 *result = NULL;
                 *length = 0;
@@ -114,37 +113,38 @@ static int read_file_long_list(char* file, long int** result, int* length)
         case '-':
         {
             errno = 0;
-            current_ptr=next_ptr+1;
-            long int end_cpu = strtol( current_ptr, &next_ptr, 10 );
+            current_ptr = next_ptr + 1;
+            long int end_cpu = strtol(current_ptr, &next_ptr, 10);
             /* if read error return error */
-            if ( next_ptr == current_ptr || errno !=0 )
+            if (next_ptr == current_ptr || errno != 0)
             {
-                fprintf(stderr, "Could not read next CPU(2): %s",current_ptr );
+                fprintf(stderr, "Could not read next CPU(2): %s", current_ptr);
                 free(*result);
                 *result = NULL;
                 *length = 0;
                 return 1;
             }
             /* if no read error, add range: realloc, then fill */
-            long int* tmp = realloc(*result, ((*length) + ( end_cpu - read_cpu + 1)) * sizeof(**result));
+            long int* tmp =
+                realloc(*result, ((*length) + (end_cpu - read_cpu + 1)) * sizeof(**result));
 
             if (!tmp)
             {
-                fprintf(stderr, "Could not realloc for CPUs(2)" );
+                fprintf(stderr, "Could not realloc for CPUs(2)");
                 free(*result);
                 *result = NULL;
                 *length = 0;
                 return 1;
             }
 
-            for ( long int i = read_cpu; i <= end_cpu ; i ++ )
-                tmp[ *length + ( i - read_cpu ) ] = read_cpu ;
+            for (long int i = read_cpu; i <= end_cpu; i++)
+                tmp[*length + (i - read_cpu)] = read_cpu;
 
             *result = tmp;
             (*length) += end_cpu - read_cpu + 1;
 
             /*next character should be ',' or '\0' */
-            switch ( *next_ptr )
+            switch (*next_ptr)
             {
             case '\n': /* fall-through */
             case '\0':
@@ -153,7 +153,7 @@ static int read_file_long_list(char* file, long int** result, int* length)
                 current_ptr = next_ptr + 1;
                 break;
             default:
-                fprintf(stderr, "Unexpected cpulist encoding (%s) %s",file, next_ptr );
+                fprintf(stderr, "Unexpected cpulist encoding (%s) %s", file, next_ptr);
                 free(*result);
                 *result = NULL;
                 *length = 0;
@@ -163,7 +163,7 @@ static int read_file_long_list(char* file, long int** result, int* length)
         }
         /* unexpected character return error */
         default:
-            fprintf(stderr, "Unexpected cpulist encoding(2) (%s) %s",file, next_ptr );
+            fprintf(stderr, "Unexpected cpulist encoding(2) (%s) %s", file, next_ptr);
             free(*result);
             *result = NULL;
             *length = 0;
@@ -172,7 +172,7 @@ static int read_file_long_list(char* file, long int** result, int* length)
     }
     return 0;
 }
-static int get_package( char * sysfs_path, int node )
+static int get_package(char* sysfs_path, int node)
 {
     long int* cpus;
     int nr_cpus;
@@ -180,25 +180,24 @@ static int get_package( char * sysfs_path, int node )
     sprintf(filename, "%s/devices/system/node/node%d/cpulist", sysfs_path, node);
     if (read_file_long_list(filename, &cpus, &nr_cpus))
     {
-        fprintf(stderr, "Could not read %s\n",filename);
+        fprintf(stderr, "Could not read %s\n", filename);
         return -1;
     }
-    if (nr_cpus < 1 )
+    if (nr_cpus < 1)
     {
-        fprintf(stderr, "Could not read %s -> no cpus found\n",filename);
+        fprintf(stderr, "Could not read %s -> no cpus found\n", filename);
         return -1;
     }
     long int package_id;
     sprintf(filename, "%s/devices/system/cpu/cpu%ld/topology/physical_package_id", sysfs_path,
-            cpus[0] );
+            cpus[0]);
     if (read_file_long(filename, &package_id))
     {
-        fprintf(stderr, "Could not read %s",filename);
+        fprintf(stderr, "Could not read %s", filename);
         free(cpus);
         return -1;
     }
     return package_id;
-
 }
 
 /*
@@ -218,7 +217,8 @@ int freq_gen_get_num_uncore()
 
     if (proc_mounts == NULL)
     {
-    	LIBFREQGEN_SET_ERROR("could not access list of mounts in \"/proc/mounts\" while checking if sysfs is mounted");
+        LIBFREQGEN_SET_ERROR("could not access list of mounts in \"/proc/mounts\" while checking "
+                             "if sysfs is mounted");
         return -errno;
     }
 
@@ -233,7 +233,8 @@ int freq_gen_get_num_uncore()
     if (ferror(proc_mounts))
     {
         endmntent(proc_mounts);
-        LIBFREQGEN_SET_ERROR("I/O-Error when reading \"/proc/mounts\" while checking if sysfs is mounted");
+        LIBFREQGEN_SET_ERROR(
+            "I/O-Error when reading \"/proc/mounts\" while checking if sysfs is mounted");
         return -ferror(proc_mounts);
     }
 
@@ -250,7 +251,8 @@ int freq_gen_get_num_uncore()
         BUFFER_SIZE)
     {
         endmntent(proc_mounts);
-        LIBFREQGEN_SET_ERROR("sysfs mount string is too long. Exceeded BUFFER_SIZE (%d)", BUFFER_SIZE);
+        LIBFREQGEN_SET_ERROR("sysfs mount string is too long. Exceeded BUFFER_SIZE (%d)",
+                             BUFFER_SIZE);
         return -ENOMEM;
     }
     endmntent(proc_mounts);
@@ -259,7 +261,7 @@ int freq_gen_get_num_uncore()
     DIR* dir = opendir(buffer);
     if (dir == NULL)
     {
-    	LIBFREQGEN_SET_ERROR("could not opendir \"%s\"", buffer);
+        LIBFREQGEN_SET_ERROR("could not opendir \"%s\"", buffer);
         return -EIO;
     }
 

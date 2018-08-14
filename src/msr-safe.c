@@ -13,15 +13,15 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdint.h>
 
+#include "error.h"
 #include "freq_gen_internal.h"
 #include "freq_gen_internal_generic.h"
-#include "error.h"
 
 /* some definitions to parse cpuid */
 #define STEPPING(eax) (eax & 0xF)
@@ -46,7 +46,9 @@ static int is_newer = 1;
 static inline void cpuid(unsigned int* eax, unsigned int* ebx, unsigned int* ecx, unsigned int* edx)
 {
     /* ecx is often an input as well as an output. */
-    __asm__ volatile("cpuid" : "=a"(*eax), "=b"(*ebx), "=c"(*ecx), "=d"(*edx) : "0"(*eax), "2"(*ecx));
+    __asm__ volatile("cpuid"
+                     : "=a"(*eax), "=b"(*ebx), "=c"(*ecx), "=d"(*edx)
+                     : "0"(*eax), "2"(*ecx));
 }
 
 /* check whether frequency scaling for the current CPU is supported
@@ -79,7 +81,7 @@ static int is_supported()
         cpuid(&eax, &ebx, &ecx, &edx);
         if (FAMILY(eax) != 6)
         {
-        	LIBFREQGEN_SET_ERROR("Unrecognized Intel CPU family 0x%x", FAMILY(eax));
+            LIBFREQGEN_SET_ERROR("Unrecognized Intel CPU family 0x%x", FAMILY(eax));
             return 0;
         }
         switch ((EXT_MODEL(eax) << 4) + MODEL(eax))
@@ -123,7 +125,8 @@ static int is_supported()
             break;
         /* none of the above */
         default:
-        	LIBFREQGEN_SET_ERROR("Unrecognized Intel CPU model 0x%x", (EXT_MODEL(eax) << 4) + MODEL(eax));
+            LIBFREQGEN_SET_ERROR("Unrecognized Intel CPU model 0x%x",
+                                 (EXT_MODEL(eax) << 4) + MODEL(eax));
             return 0;
         }
         return 1;
@@ -139,7 +142,9 @@ static int is_supported()
 
     eax = 1;
     cpuid(&eax, &ebx, &ecx, &edx);
-    LIBFREQGEN_SET_ERROR("Unrecognized CPU from vendor \"%s\". cpu base family 0x%x, cpu ext family 0x%x, cpu base model 0x%x, cpu ext model 0x%x", buffer, FAMILY(eax), EXT_FAMILY(eax), MODEL(eax), EXT_MODEL(eax));
+    LIBFREQGEN_SET_ERROR("Unrecognized CPU from vendor \"%s\". cpu base family 0x%x, cpu ext "
+                         "family 0x%x, cpu base model 0x%x, cpu ext model 0x%x",
+                         buffer, FAMILY(eax), EXT_FAMILY(eax), MODEL(eax), EXT_MODEL(eax));
 
     return 0;
 }
@@ -171,7 +176,7 @@ static int is_supported_uncore()
         cpuid(&eax, &ebx, &ecx, &edx);
         if (FAMILY(eax) != 6)
         {
-        	LIBFREQGEN_SET_ERROR("Unrecognized Intel CPU family 0x%x", FAMILY(eax));
+            LIBFREQGEN_SET_ERROR("Unrecognized Intel CPU family 0x%x", FAMILY(eax));
             return 0;
         }
         switch ((EXT_MODEL(eax) << 4) + MODEL(eax))
@@ -201,7 +206,8 @@ static int is_supported_uncore()
             break;
         /* none of the above */
         default:
-        	LIBFREQGEN_SET_ERROR("Unrecognized Intel CPU model 0x%x", (EXT_MODEL(eax) << 4) + MODEL(eax));
+            LIBFREQGEN_SET_ERROR("Unrecognized Intel CPU model 0x%x",
+                                 (EXT_MODEL(eax) << 4) + MODEL(eax));
             return 0;
         }
         return 1;
@@ -209,7 +215,9 @@ static int is_supported_uncore()
 
     eax = 1;
     cpuid(&eax, &ebx, &ecx, &edx);
-    LIBFREQGEN_SET_ERROR("Unrecognized CPU from vendor \"%s\". cpu base family 0x%x, cpu ext family 0x%x, cpu base model 0x%x, cpu ext model 0x%x", buffer, FAMILY(eax), EXT_FAMILY(eax), MODEL(eax), EXT_MODEL(eax));
+    LIBFREQGEN_SET_ERROR("Unrecognized CPU from vendor \"%s\". cpu base family 0x%x, cpu ext "
+                         "family 0x%x, cpu base model 0x%x, cpu ext model 0x%x",
+                         buffer, FAMILY(eax), EXT_FAMILY(eax), MODEL(eax), EXT_MODEL(eax));
 
     return 0;
 }
@@ -250,7 +258,9 @@ static int freq_gen_msr_get_max_entries()
             if (snprintf(buffer, BUFFER_SIZE, "/dev/cpu/%lli/msr", current) == BUFFER_SIZE)
             {
                 closedir(dir);
-                LIBFREQGEN_SET_ERROR("could not allocate enough memory to store filepath to msr-file, BUFFER_SIZE (%d) exceeded", BUFFER_SIZE);
+                LIBFREQGEN_SET_ERROR("could not allocate enough memory to store filepath to "
+                                     "msr-file, BUFFER_SIZE (%d) exceeded",
+                                     BUFFER_SIZE);
                 return -ENOMEM;
             }
 
@@ -262,7 +272,9 @@ static int freq_gen_msr_get_max_entries()
                 if (snprintf(buffer, BUFFER_SIZE, "/dev/cpu/%lli/msr-safe", current) == BUFFER_SIZE)
                 {
                     closedir(dir);
-                    LIBFREQGEN_SET_ERROR("could not allocate enough memory to store filepath to msr-safe-file, BUFFER_SIZE (%d) exceeded", BUFFER_SIZE);
+                    LIBFREQGEN_SET_ERROR("could not allocate enough memory to store filepath to "
+                                         "msr-safe-file, BUFFER_SIZE (%d) exceeded",
+                                         BUFFER_SIZE);
                     return -ENOMEM;
                 }
                 if (access(buffer, W_OK) != 0)
@@ -292,7 +304,7 @@ static freq_gen_interface_t* freq_gen_msr_init(void)
     int ret = freq_gen_msr_get_max_entries();
     if (ret < 0)
     {
-    	LIBFREQGEN_APPEND_ERROR("could not get the maximum number of cpus");
+        LIBFREQGEN_APPEND_ERROR("could not get the maximum number of cpus");
         return NULL;
     }
     if (!is_supported())
@@ -312,7 +324,7 @@ static freq_gen_interface_t* freq_gen_msr_init_uncore(void)
     int ret = freq_gen_msr_get_max_entries();
     if (ret < 0)
     {
-    	LIBFREQGEN_APPEND_ERROR("could not get the maximum number of cpus");
+        LIBFREQGEN_APPEND_ERROR("could not get the maximum number of cpus");
         return NULL;
     }
     if (!is_supported_uncore())
@@ -334,7 +346,8 @@ static freq_gen_single_device_t freq_gen_msr_device_init(int cpu_id)
 
     if (snprintf(buffer, BUFFER_SIZE, "/dev/cpu/%d/msr", cpu_id) == BUFFER_SIZE)
     {
-    	LIBFREQGEN_SET_ERROR("could not assemble file-path to msr file, BUFFER_SIZE(%d) exceeded", BUFFER_SIZE);
+        LIBFREQGEN_SET_ERROR("could not assemble file-path to msr file, BUFFER_SIZE(%d) exceeded",
+                             BUFFER_SIZE);
         return -ENOMEM;
     }
 
@@ -343,13 +356,15 @@ static freq_gen_single_device_t freq_gen_msr_device_init(int cpu_id)
     {
         if (snprintf(buffer, BUFFER_SIZE, "/dev/cpu/%d/msr-safe", cpu_id) == BUFFER_SIZE)
         {
-        	LIBFREQGEN_SET_ERROR("could not assemble file-path to msr-safe file, BUFFER_SIZE(%d) exceeded", BUFFER_SIZE);
+            LIBFREQGEN_SET_ERROR(
+                "could not assemble file-path to msr-safe file, BUFFER_SIZE(%d) exceeded",
+                BUFFER_SIZE);
             return ENOMEM;
         }
         fd = open(buffer, O_RDWR);
         if (fd < 0)
         {
-        	LIBFREQGEN_SET_ERROR("could not open file \"%s\" for reading", buffer);
+            LIBFREQGEN_SET_ERROR("could not open file \"%s\" for reading", buffer);
             return -errno;
         }
     }
@@ -371,21 +386,22 @@ static freq_gen_single_device_t freq_gen_msr_device_init_uncore(int uncore)
     if (snprintf(buffer, BUFFER_SIZE, "/sys/devices/system/node/node%d/cpulist", uncore) ==
         BUFFER_SIZE)
     {
-    	LIBFREQGEN_SET_ERROR("could not assemble file-path to cpulist, BUFFER_SIZE(%d) exceeded", BUFFER_SIZE);
+        LIBFREQGEN_SET_ERROR("could not assemble file-path to cpulist, BUFFER_SIZE(%d) exceeded",
+                             BUFFER_SIZE);
         return -ENOMEM;
     }
 
     int fd = open(buffer, O_RDONLY);
     if (fd < 0)
     {
-    	LIBFREQGEN_SET_ERROR("could not open file \"%s\" for reading", buffer);
+        LIBFREQGEN_SET_ERROR("could not open file \"%s\" for reading", buffer);
         return -EIO;
     }
     int ret = read(fd, buffer, BUFFER_SIZE);
     close(fd);
     if (ret <= 0)
     {
-    	LIBFREQGEN_SET_ERROR("could not read %d bytes from file \"%s\"", BUFFER_SIZE, buffer);
+        LIBFREQGEN_SET_ERROR("could not read %d bytes from file \"%s\"", BUFFER_SIZE, buffer);
         return -EIO;
     }
     buffer[ret] = '\0';
@@ -393,13 +409,14 @@ static freq_gen_single_device_t freq_gen_msr_device_init_uncore(int uncore)
     long cpu = strtol(buffer, &tail, 10);
     if (tail == buffer)
     {
-    	LIBFREQGEN_SET_ERROR("could not parse given data to long, content \"%20s\"", buffer);
+        LIBFREQGEN_SET_ERROR("could not parse given data to long, content \"%20s\"", buffer);
         return -EIO;
     }
 
     if (snprintf(buffer, BUFFER_SIZE, "/dev/cpu/%ld/msr", cpu) == BUFFER_SIZE)
     {
-    	LIBFREQGEN_SET_ERROR("could not assemble file-path to msr file, BUFFER_SIZE(%d) exceeded", BUFFER_SIZE);
+        LIBFREQGEN_SET_ERROR("could not assemble file-path to msr file, BUFFER_SIZE(%d) exceeded",
+                             BUFFER_SIZE);
         return -ENOMEM;
     }
 
@@ -408,13 +425,15 @@ static freq_gen_single_device_t freq_gen_msr_device_init_uncore(int uncore)
     {
         if (snprintf(buffer, BUFFER_SIZE, "/dev/cpu/%ld/msr-safe", cpu) == BUFFER_SIZE)
         {
-        	LIBFREQGEN_SET_ERROR("could not assemble file-path to msr-safe file, BUFFER_SIZE(%d) exceeded", BUFFER_SIZE);
+            LIBFREQGEN_SET_ERROR(
+                "could not assemble file-path to msr-safe file, BUFFER_SIZE(%d) exceeded",
+                BUFFER_SIZE);
             return -ENOMEM;
         }
         fd = open(buffer, O_RDWR);
         if (fd < 0)
         {
-        	LIBFREQGEN_SET_ERROR("could not open file \"%s\" for reading", buffer);
+            LIBFREQGEN_SET_ERROR("could not open file \"%s\" for reading", buffer);
             return -errno;
         }
     }
@@ -443,7 +462,9 @@ static long long int freq_gen_msr_get_frequency(freq_gen_single_device_t fp)
             return (setting & 0xFF) * 100000000;
     else
     {
-    	LIBFREQGEN_SET_ERROR("could not read 8 bytes of data from msr file at offset IA32_PERF_CTL (%d)", IA32_PERF_CTL);
+        LIBFREQGEN_SET_ERROR(
+            "could not read 8 bytes of data from msr file at offset IA32_PERF_CTL (%d)",
+            IA32_PERF_CTL);
         return -EIO;
     }
 }
@@ -458,7 +479,9 @@ static int freq_gen_msr_set_frequency(freq_gen_single_device_t fp, freq_gen_sett
         return 0;
     else
     {
-    	LIBFREQGEN_SET_ERROR("could not write 8 bytes (0x%llx) to msr file at offset IA32_PERF_CTL (%d)", setting, IA32_PERF_CTL);
+        LIBFREQGEN_SET_ERROR(
+            "could not write 8 bytes (0x%llx) to msr file at offset IA32_PERF_CTL (%d)", setting,
+            IA32_PERF_CTL);
         return -result;
     }
 }
@@ -473,7 +496,9 @@ static long long int freq_gen_msr_get_frequency_uncore(freq_gen_single_device_t 
         return (setting & 0x77) * 100000000;
     else
     {
-    	LIBFREQGEN_SET_ERROR("could not read 8 bytes of data from msr file at offset UNCORE_RATIO_LIMIT (%d)", UNCORE_RATIO_LIMIT);
+        LIBFREQGEN_SET_ERROR(
+            "could not read 8 bytes of data from msr file at offset UNCORE_RATIO_LIMIT (%d)",
+            UNCORE_RATIO_LIMIT);
         return -EIO;
     }
 }
@@ -488,7 +513,9 @@ static long long int freq_gen_msr_get_min_frequency_uncore(freq_gen_single_devic
         return ((setting << 8) & 0x77) * 100000000;
     else
     {
-    	LIBFREQGEN_SET_ERROR("could not read 8 bytes of data from msr file at offset UNCORE_RATIO_LIMIT (%d)", UNCORE_RATIO_LIMIT);
+        LIBFREQGEN_SET_ERROR(
+            "could not read 8 bytes of data from msr file at offset UNCORE_RATIO_LIMIT (%d)",
+            UNCORE_RATIO_LIMIT);
         return -EIO;
     }
 }
@@ -510,7 +537,9 @@ static int freq_gen_msr_set_frequency_uncore(freq_gen_single_device_t fp,
         return 0;
     else
     {
-    	LIBFREQGEN_SET_ERROR("could not write 8 bytes (0x%llx) to msr file at offset UNCORE_RATIO_LIMIT (%d)", *((uint64_t *) setting_in), UNCORE_RATIO_LIMIT);
+        LIBFREQGEN_SET_ERROR(
+            "could not write 8 bytes (0x%llx) to msr file at offset UNCORE_RATIO_LIMIT (%d)",
+            *((uint64_t*)setting_in), UNCORE_RATIO_LIMIT);
         return EIO;
     }
 }
@@ -524,7 +553,9 @@ static int freq_gen_msr_set_min_frequency_uncore(freq_gen_single_device_t fp,
     int result = pread(fp, &setting, 8, UNCORE_RATIO_LIMIT);
     if (result != 8)
     {
-    	LIBFREQGEN_SET_ERROR("could not read 8 bytes of data from msr file at offset UNCORE_RATIO_LIMIT (%d)", UNCORE_RATIO_LIMIT);
+        LIBFREQGEN_SET_ERROR(
+            "could not read 8 bytes of data from msr file at offset UNCORE_RATIO_LIMIT (%d)",
+            UNCORE_RATIO_LIMIT);
         return EIO;
     }
     setting = setting & 0xFFFFFFFFFFFF00FF;
@@ -534,7 +565,9 @@ static int freq_gen_msr_set_min_frequency_uncore(freq_gen_single_device_t fp,
         return 0;
     else
     {
-    	LIBFREQGEN_SET_ERROR("could not write 8 bytes (0x%llx) to msr file at offset UNCORE_RATIO_LIMIT (%d)", setting, UNCORE_RATIO_LIMIT);
+        LIBFREQGEN_SET_ERROR(
+            "could not write 8 bytes (0x%llx) to msr file at offset UNCORE_RATIO_LIMIT (%d)",
+            setting, UNCORE_RATIO_LIMIT);
         return EIO;
     }
 }
@@ -585,7 +618,5 @@ static freq_gen_interface_t freq_gen_msr_uncore_interface = {
 };
 
 freq_gen_interface_internal_t freq_gen_msr_interface_internal = {
-    .name = "msr",
-    .init_cpufreq = freq_gen_msr_init,
-    .init_uncorefreq = freq_gen_msr_init_uncore
+    .name = "msr", .init_cpufreq = freq_gen_msr_init, .init_uncorefreq = freq_gen_msr_init_uncore
 };

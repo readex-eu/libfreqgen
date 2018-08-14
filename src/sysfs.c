@@ -18,8 +18,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "freq_gen_internal.h"
 #include "error.h"
+#include "freq_gen_internal.h"
 
 static freq_gen_interface_t sysfs_interface;
 
@@ -43,7 +43,7 @@ static int freq_gen_sysfs_init(void)
 
     if (proc_mounts == NULL)
     {
-    	LIBFREQGEN_SET_ERROR("could not open \"/proc/mounts\" for determining sysfs");
+        LIBFREQGEN_SET_ERROR("could not open \"/proc/mounts\" for determining sysfs");
         return errno;
     }
 
@@ -65,7 +65,7 @@ static int freq_gen_sysfs_init(void)
     /* reached end of file? */
     if (feof(proc_mounts))
     {
-    	LIBFREQGEN_SET_ERROR("Could not locate sysfs in \"/proc/mounts\"");
+        LIBFREQGEN_SET_ERROR("Could not locate sysfs in \"/proc/mounts\"");
         endmntent(proc_mounts);
         return EINVAL;
     }
@@ -75,7 +75,9 @@ static int freq_gen_sysfs_init(void)
         BUFFER_SIZE)
     {
         endmntent(proc_mounts);
-        LIBFREQGEN_SET_ERROR("could not allocate file name buffer for cpufreq, sysfs mount name too long for BUFFER_SIZE (%d)", BUFFER_SIZE);
+        LIBFREQGEN_SET_ERROR("could not allocate file name buffer for cpufreq, sysfs mount name "
+                             "too long for BUFFER_SIZE (%d)",
+                             BUFFER_SIZE);
         return ENOMEM;
     }
     endmntent(proc_mounts);
@@ -84,14 +86,16 @@ static int freq_gen_sysfs_init(void)
     DIR* dir = opendir(buffer);
     if (dir == NULL)
     {
-    	LIBFREQGEN_SET_ERROR("could not opendir \"%s\"", buffer);
+        LIBFREQGEN_SET_ERROR("could not opendir \"%s\"", buffer);
         return EIO;
     }
 
     if (snprintf(buffer, BUFFER_SIZE, "%s/devices/system/cpu/", current_entry->mnt_dir) ==
         BUFFER_SIZE)
     {
-    	LIBFREQGEN_SET_ERROR("could not allocate file name buffer for sysfs-cpu-dir, sysfs mount name too long for BUFFER_SIZE (%d)", BUFFER_SIZE);
+        LIBFREQGEN_SET_ERROR("could not allocate file name buffer for sysfs-cpu-dir, sysfs mount "
+                             "name too long for BUFFER_SIZE (%d)",
+                             BUFFER_SIZE);
         return ENOMEM;
     }
     /* store sysfs start */
@@ -112,31 +116,39 @@ static freq_gen_single_device_t freq_gen_sysfs_init_device(int cpu)
     if (snprintf(buffer, BUFFER_SIZE, "%scpu%d/cpufreq/scaling_governor", sysfs_start, cpu) ==
         BUFFER_SIZE)
     {
-    	LIBFREQGEN_SET_ERROR("could not allocate file name buffer for scaling_governor filepath, BUFFER_SIZE (%d) exceeded", BUFFER_SIZE);
+        LIBFREQGEN_SET_ERROR("could not allocate file name buffer for scaling_governor filepath, "
+                             "BUFFER_SIZE (%d) exceeded",
+                             BUFFER_SIZE);
         return -ENOMEM;
     }
     fd = open(buffer, O_RDONLY);
     if (fd < 0)
     {
-    	LIBFREQGEN_SET_ERROR("could not open file \"%s\" for reading", buffer);
+        LIBFREQGEN_SET_ERROR("could not open file \"%s\" for reading", buffer);
         return -EIO;
     }
     if (read(fd, buffer, BUFFER_SIZE) == BUFFER_SIZE)
     {
-    	LIBFREQGEN_SET_ERROR("scaling_governor file too large, BUFFER_SIZE(%d) exceeded", buffer, BUFFER_SIZE);
+        LIBFREQGEN_SET_ERROR("scaling_governor file too large, BUFFER_SIZE(%d) exceeded", buffer,
+                             BUFFER_SIZE);
         return -ENOMEM;
     }
     close(fd);
     if (strncmp("userspace", buffer, 9) != 0)
     {
-    	LIBFREQGEN_SET_ERROR("insufficient permissions according to file scaling_governor, expected \"userspace\" but found %9s", buffer);
+        LIBFREQGEN_SET_ERROR("insufficient permissions according to file scaling_governor, "
+                             "expected \"userspace\" but found %9s",
+                             buffer);
         return -EPERM;
     }
 
     if (snprintf(buffer, BUFFER_SIZE, "%scpu%d/cpufreq/scaling_setspeed", sysfs_start, cpu) ==
         BUFFER_SIZE)
     {
-    	LIBFREQGEN_SET_ERROR("could not allocate file name buffer for scaling_setspeed filepath, BUFFER_SIZE (%d) exceeded. THIS SHOULD NEVER HAPPEN! As the BUFFER_SIZE condition is the same as a few lines above this line", BUFFER_SIZE);
+        LIBFREQGEN_SET_ERROR("could not allocate file name buffer for scaling_setspeed filepath, "
+                             "BUFFER_SIZE (%d) exceeded. THIS SHOULD NEVER HAPPEN! As the "
+                             "BUFFER_SIZE condition is the same as a few lines above this line",
+                             BUFFER_SIZE);
         return -ENOMEM;
     }
     fd = open(buffer, O_RDWR);
@@ -156,14 +168,14 @@ static int freq_gen_sysfs_get_max_sysfs_entries()
     }
     if (sysfs_start == NULL)
     {
-    	LIBFREQGEN_SET_ERROR("sysfs_start is NULL. Looks like it was not initialized.");
+        LIBFREQGEN_SET_ERROR("sysfs_start is NULL. Looks like it was not initialized.");
         return -EAGAIN;
     }
 
     DIR* dir = opendir(sysfs_start);
     if (dir == NULL)
     {
-    	LIBFREQGEN_SET_ERROR("could not opendir \"%s\"", sysfs_start);
+        LIBFREQGEN_SET_ERROR("could not opendir \"%s\"", sysfs_start);
         return -EIO;
     }
     struct dirent* entry;
@@ -194,7 +206,7 @@ static int freq_gen_sysfs_get_max_sysfs_entries()
     closedir(dir);
     if (max == -1)
     {
-    	LIBFREQGEN_SET_ERROR("could not read cpus from directory \"%s\"", sysfs_start);
+        LIBFREQGEN_SET_ERROR("could not read cpus from directory \"%s\"", sysfs_start);
         return -EACCES;
     }
     max = max + 1;
@@ -209,7 +221,8 @@ static freq_gen_setting_t freq_gen_prepare_sysfs_access(long long int target, in
     struct setting_s* setting = malloc(sizeof(struct setting_s));
     if (setting == NULL)
     {
-    	LIBFREQGEN_SET_ERROR("could not allocate %d bytes of memory for a struct setting_s", sizeof(struct setting_s));
+        LIBFREQGEN_SET_ERROR("could not allocate %d bytes of memory for a struct setting_s",
+                             sizeof(struct setting_s));
         return NULL;
     }
     setting->string = strdup(buffer);
@@ -240,7 +253,7 @@ static long long int freq_gen_sysfs_get_frequency(freq_gen_single_device_t fp)
     int result = pread((int)fp, buffer, BUFFER_SIZE, 0);
     if (result < 0)
     {
-    	LIBFREQGEN_SET_ERROR("I/O-Error could not read from file pointer (%d)", (int) fp);
+        LIBFREQGEN_SET_ERROR("I/O-Error could not read from file pointer (%d)", (int)fp);
         return result;
     }
     char* tail;
@@ -252,7 +265,8 @@ static long long int freq_gen_sysfs_get_frequency(freq_gen_single_device_t fp)
     }
     else
     {
-    	LIBFREQGEN_SET_ERROR("invalid contents of file, expected a long long, but got: %100s", buffer);
+        LIBFREQGEN_SET_ERROR("invalid contents of file, expected a long long, but got: %100s",
+                             buffer);
         return -EIO;
     }
 }
@@ -268,7 +282,7 @@ static int freq_gen_sysfs_set_frequency(freq_gen_single_device_t fp, freq_gen_se
         return 0;
     else
     {
-    	LIBFREQGEN_SET_ERROR("could not write frequency \"%s\"", target->string);
+        LIBFREQGEN_SET_ERROR("could not write frequency \"%s\"", target->string);
         return EIO;
     }
 }
@@ -309,7 +323,5 @@ static freq_gen_interface_t* freq_gen_init_cpufreq(void)
 }
 
 freq_gen_interface_internal_t freq_gen_sysfs_interface_internal = {
-    .name = "sysfs",
-    .init_cpufreq = freq_gen_init_cpufreq,
-    .init_uncorefreq = NULL
+    .name = "sysfs", .init_cpufreq = freq_gen_init_cpufreq, .init_uncorefreq = NULL
 };

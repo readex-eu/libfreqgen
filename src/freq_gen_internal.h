@@ -15,7 +15,7 @@
 
 typedef struct
 {
-    char * name;
+    char* name;
     freq_gen_interface_t* (*init_cpufreq)(
         void); /**< initialize core frequency changes, can be set to NULL if non-existant */
     freq_gen_interface_t* (*init_uncorefreq)(

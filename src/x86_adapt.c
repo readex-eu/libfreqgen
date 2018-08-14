@@ -16,8 +16,8 @@
 
 #include <x86_adapt.h>
 
-#include "freq_gen_internal.h"
 #include "error.h"
+#include "freq_gen_internal.h"
 
 static freq_gen_interface_t freq_gen_x86a_cpu_interface;
 static freq_gen_interface_t freq_gen_x86a_uncore_interface;
@@ -51,7 +51,9 @@ static int is_newer = 1;
 static inline void cpuid(unsigned int* eax, unsigned int* ebx, unsigned int* ecx, unsigned int* edx)
 {
     /* ecx is often an input as well as an output. */
-    __asm__ volatile("cpuid" : "=a"(*eax), "=b"(*ebx), "=c"(*ecx), "=d"(*edx) : "0"(*eax), "2"(*ecx));
+    __asm__ volatile("cpuid"
+                     : "=a"(*eax), "=b"(*ebx), "=c"(*ecx), "=d"(*edx)
+                     : "0"(*eax), "2"(*ecx));
 }
 
 /* check whether frequency scaling for the current CPU is supported
@@ -119,16 +121,18 @@ static int freq_gen_x86a_init_cpu(void)
         {
             if (!uncore_is_initialized)
                 x86_adapt_finalize();
-            LIBFREQGEN_SET_ERROR("invalid cpu returned by x86_adapt_lookup_ci_name for Intel_Target_PState");
+            LIBFREQGEN_SET_ERROR(
+                "invalid cpu returned by x86_adapt_lookup_ci_name for Intel_Target_PState");
             return -xa_index_cpu;
         }
 
         already_initialized = 1;
         core_is_initialized = 1;
         return 0;
-    } else
+    }
+    else
     {
-    	LIBFREQGEN_SET_ERROR("could not initialize x86_adapt");
+        LIBFREQGEN_SET_ERROR("could not initialize x86_adapt");
     }
     return ret;
 }
@@ -149,7 +153,8 @@ static int freq_gen_x86a_init_uncore(void)
         {
             if (!core_is_initialized)
                 x86_adapt_finalize();
-            LIBFREQGEN_SET_ERROR("invalid index returned by x86_adapt_lookup_ci_name for Intel_UNCORE_MIN_RATIO");
+            LIBFREQGEN_SET_ERROR(
+                "invalid index returned by x86_adapt_lookup_ci_name for Intel_UNCORE_MIN_RATIO");
             return -xa_index_uncore_low;
         }
         xa_index_uncore_high = x86_adapt_lookup_ci_name(X86_ADAPT_DIE, "Intel_UNCORE_MAX_RATIO");
@@ -157,15 +162,17 @@ static int freq_gen_x86a_init_uncore(void)
         {
             if (!core_is_initialized)
                 x86_adapt_finalize();
-            LIBFREQGEN_SET_ERROR("invalid index returned by x86_adapt_lookup_ci_name for Intel_UNCORE_MAX_RATIO");
+            LIBFREQGEN_SET_ERROR(
+                "invalid index returned by x86_adapt_lookup_ci_name for Intel_UNCORE_MAX_RATIO");
             return -xa_index_uncore_high;
         }
         already_initialized = 1;
         uncore_is_initialized = 1;
         return 0;
-    } else
+    }
+    else
     {
-    	LIBFREQGEN_SET_ERROR("could not initialize x86_adapt");
+        LIBFREQGEN_SET_ERROR("could not initialize x86_adapt");
     }
     return ret;
 }
@@ -195,7 +202,7 @@ static freq_gen_setting_t freq_gen_x86a_prepare_access(long long int target, int
     unsigned long long* setting = malloc(sizeof(unsigned long long));
     if (setting == NULL)
     {
-    	LIBFREQGEN_SET_ERROR("could not allocate %d bytes of memory", sizeof(unsigned long long));
+        LIBFREQGEN_SET_ERROR("could not allocate %d bytes of memory", sizeof(unsigned long long));
         return NULL;
     }
     if (is_newer)
@@ -210,7 +217,7 @@ static freq_gen_setting_t freq_gen_x86a_prepare_access_uncore(long long int targ
     unsigned long long* setting = malloc(sizeof(unsigned long long));
     if (setting == NULL)
     {
-    	LIBFREQGEN_SET_ERROR("could not allocate %d bytes of memory", sizeof(unsigned long long));
+        LIBFREQGEN_SET_ERROR("could not allocate %d bytes of memory", sizeof(unsigned long long));
         return NULL;
     }
     *setting = (target / 100000000);
@@ -228,7 +235,7 @@ static long long int freq_gen_x86_get_frequency(freq_gen_single_device_t fp)
             return frequency * 100000000;
     else
     {
-    	LIBFREQGEN_SET_ERROR("could not get cpu frequency from x86_adapt");
+        LIBFREQGEN_SET_ERROR("could not get cpu frequency from x86_adapt");
         return -EIO;
     }
 }
@@ -241,7 +248,7 @@ static int freq_gen_x86_set_frequency(freq_gen_single_device_t fp, freq_gen_sett
         return 0;
     else
     {
-    	LIBFREQGEN_SET_ERROR("could not set value %llu to cpu", *target);
+        LIBFREQGEN_SET_ERROR("could not set value %llu to cpu", *target);
         return -result;
     }
 }
@@ -254,7 +261,7 @@ static long long int freq_gen_x86_get_frequency_uncore(freq_gen_single_device_t 
         return frequency * 100000000;
     else
     {
-    	LIBFREQGEN_SET_ERROR("could not get uncore frequency from x86_adapt");
+        LIBFREQGEN_SET_ERROR("could not get uncore frequency from x86_adapt");
         return -EIO;
     }
 }
@@ -267,7 +274,7 @@ static long long int freq_gen_x86_get_min_frequency_uncore(freq_gen_single_devic
         return frequency * 100000000;
     else
     {
-    	LIBFREQGEN_SET_ERROR("could not get uncore frequency from x86_adapt");
+        LIBFREQGEN_SET_ERROR("could not get uncore frequency from x86_adapt");
         return -EIO;
     }
 }
@@ -282,7 +289,7 @@ static int freq_gen_x86_set_frequency_uncore(freq_gen_single_device_t fp,
         return 0;
     else
     {
-    	LIBFREQGEN_SET_ERROR("could not set uncore value %llu", *target);
+        LIBFREQGEN_SET_ERROR("could not set uncore value %llu", *target);
         return EIO;
     }
 }
@@ -296,7 +303,7 @@ static int freq_gen_x86_set_min_frequency_uncore(freq_gen_single_device_t fp,
         return 0;
     else
     {
-    	LIBFREQGEN_SET_ERROR("could not set uncore value %llu", *target);
+        LIBFREQGEN_SET_ERROR("could not set uncore value %llu", *target);
         return EIO;
     }
 }

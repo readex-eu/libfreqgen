@@ -14,7 +14,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 
-SET(SOURCES src/sysfs.c src/msr-safe.c src/freq_gen_internal_generic.c src/freq_gen.c)
+SET(SOURCES src/sysfs.c src/msr-safe.c src/freq_gen_internal_generic.c src/freq_gen.c src/error.c)
 
 find_package(X86Adapt)
 

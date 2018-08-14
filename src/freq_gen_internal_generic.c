@@ -18,6 +18,7 @@
 #include <unistd.h>
 
 #include "freq_gen_internal.h"
+#include "error.h"
 
 static int read_file_long(char* file, long int* result)
 {
@@ -216,7 +217,10 @@ int freq_gen_get_num_uncore()
     FILE* proc_mounts = setmntent("/proc/mounts", "r");
 
     if (proc_mounts == NULL)
+    {
+    	LIBFREQGEN_SET_ERROR("could not access list of mounts in \"/proc/mounts\" while checking if sysfs is mounted");
         return -errno;
+    }
 
     struct mntent* current_entry = getmntent(proc_mounts);
     while (current_entry != NULL)
@@ -229,6 +233,7 @@ int freq_gen_get_num_uncore()
     if (ferror(proc_mounts))
     {
         endmntent(proc_mounts);
+        LIBFREQGEN_SET_ERROR("I/O-Error when reading \"/proc/mounts\" while checking if sysfs is mounted");
         return -ferror(proc_mounts);
     }
 
@@ -236,6 +241,7 @@ int freq_gen_get_num_uncore()
     if (feof(proc_mounts))
     {
         endmntent(proc_mounts);
+        LIBFREQGEN_SET_ERROR("according to \"/proc/mounts\" the required sysfs is not mounted");
         return -EINVAL;
     }
 
@@ -244,6 +250,7 @@ int freq_gen_get_num_uncore()
         BUFFER_SIZE)
     {
         endmntent(proc_mounts);
+        LIBFREQGEN_SET_ERROR("sysfs mount string is too long. Exceeded BUFFER_SIZE (%d)", BUFFER_SIZE);
         return -ENOMEM;
     }
     endmntent(proc_mounts);
@@ -252,6 +259,7 @@ int freq_gen_get_num_uncore()
     DIR* dir = opendir(buffer);
     if (dir == NULL)
     {
+    	LIBFREQGEN_SET_ERROR("could not opendir \"%s\"", buffer);
         return -EIO;
     }
 

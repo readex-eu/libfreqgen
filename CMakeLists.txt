@@ -29,7 +29,7 @@ find_package(Likwid)
 if (LIKWID_FOUND)
     include_directories(${LIKWID_INCLUDE_DIRS})
     LIST(APPEND SOURCES src/likwid.c)
-    SET(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DUSELIKWID _DLIKWID_DEBUG" )
+    SET(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DUSELIKWID -DLIKWID_DEBUG" )
 endif()
 
 include_directories(include)

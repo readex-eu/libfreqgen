@@ -109,7 +109,7 @@ freq_gen_interface_t* freq_gen_init(freq_gen_dev_type type);
 /**
  * Returns the current error string, which tells you what went wrong
  */
-char* libfreqgen_error_string(void);
+char* freq_gen_error_string(void);
 
 
 #endif /* SRC_FREQGEN_INTERFACE_H_ */

@@ -17,7 +17,7 @@ static char error_string[4096] = { '\0' };
 static char* not_enough_space = "Not enough space for writing error\n";
 static char* internal_error = "Error while writing error (errorception)\n";
 
-char* libfreqgen_error_string(void)
+char* freq_gen_error_string(void)
 {
     return error_string;
 }
@@ -25,7 +25,7 @@ char* libfreqgen_error_string(void)
 static int libfreqgen_handle_problematic_error_string(const int printf_return);
 static int libfreqgen_append_newline(char* strPtr, const int maxlen);
 
-void libfreqgen_set_error_string(const char* error_file, const char* error_func, int error_line,
+void freq_gen_set_error_string(const char* error_file, const char* error_func, int error_line,
                                  const char* fmt, ...)
 {
     va_list valist;
@@ -41,7 +41,7 @@ void libfreqgen_set_error_string(const char* error_file, const char* error_func,
     }
     return;
 }
-void libfreqgen_append_error_string(const char* error_file, const char* error_func, int error_line,
+void freq_gen_append_error_string(const char* error_file, const char* error_func, int error_line,
                                     const char* fmt, ...)
 {
     va_list valist;

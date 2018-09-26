@@ -269,7 +269,7 @@ static int freq_gen_msr_get_max_entries()
             {
 
                 /* check access to msr */
-                if (snprintf(buffer, BUFFER_SIZE, "/dev/cpu/%lli/msr-safe", current) == BUFFER_SIZE)
+                if (snprintf(buffer, BUFFER_SIZE, "/dev/cpu/%lli/msr_safe", current) == BUFFER_SIZE)
                 {
                     closedir(dir);
                     LIBFREQGEN_SET_ERROR("could not allocate enough memory to store filepath to "
@@ -354,7 +354,7 @@ static freq_gen_single_device_t freq_gen_msr_device_init(int cpu_id)
     int fd = open(buffer, O_RDWR);
     if (fd < 0)
     {
-        if (snprintf(buffer, BUFFER_SIZE, "/dev/cpu/%d/msr-safe", cpu_id) == BUFFER_SIZE)
+        if (snprintf(buffer, BUFFER_SIZE, "/dev/cpu/%d/msr_safe", cpu_id) == BUFFER_SIZE)
         {
             LIBFREQGEN_SET_ERROR(
                 "could not assemble file-path to msr-safe file, BUFFER_SIZE(%d) exceeded",
@@ -423,7 +423,7 @@ static freq_gen_single_device_t freq_gen_msr_device_init_uncore(int uncore)
     fd = open(buffer, O_RDWR);
     if (fd < 0)
     {
-        if (snprintf(buffer, BUFFER_SIZE, "/dev/cpu/%ld/msr-safe", cpu) == BUFFER_SIZE)
+        if (snprintf(buffer, BUFFER_SIZE, "/dev/cpu/%ld/msr_safe", cpu) == BUFFER_SIZE)
         {
             LIBFREQGEN_SET_ERROR(
                 "could not assemble file-path to msr-safe file, BUFFER_SIZE(%d) exceeded",

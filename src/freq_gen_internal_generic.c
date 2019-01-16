@@ -17,7 +17,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "error.h"
+#include "../include/error.h"
 #include "freq_gen_internal.h"
 
 static int read_file_long(char* file, long int* result)

@@ -8,7 +8,7 @@
  *      Author: rschoene
  */
 
-#include "error.h"
+#include "../include/error.h"
 #include "freq_gen_internal.h"
 #include <stdbool.h>
 #include <stddef.h>

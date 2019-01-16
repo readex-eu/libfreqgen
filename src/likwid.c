@@ -136,6 +136,7 @@ static freq_gen_setting_t freq_gen_likwid_prepare_access(long long target, int t
 {
     uint64_t current_u = 0;
     target = target / 1000;
+    //printf("avail_freqs=%s\n",avail_freqs);fflush(stdout);
     char* temp_freqs = strdup(avail_freqs);
     if (temp_freqs == NULL)
         return NULL;
@@ -146,12 +147,11 @@ static freq_gen_setting_t freq_gen_likwid_prepare_access(long long target, int t
         double current = strtod(token, NULL) * 1000;
         current_u = (uint64_t)current;
         current_u = current_u * 1000;
-        token = strpbrk(token, " ");
+        token = strtok(NULL, " ");
         if (current_u <= target)
         {
             break;
         }
-        token++;
     }
     free(temp_freqs);
     uint64_t* setting = malloc(sizeof(double));

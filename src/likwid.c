@@ -287,13 +287,13 @@ static int freq_gen_likwid_set_frequency_uncore(freq_gen_single_device_t fp,
     freq_setUncoreFreqMax(fp, *setting);
 #else  /* AVOID_LIKWID_BUG */
     uint64_t set_freq = freq_setUncoreFreqMin(fp, *setting);
-    if (set_freq == 0)
+    if (set_freq != 0)
     {
         LIBFREQGEN_SET_ERROR("could not set min uncore frequency %d, I/O-Error", *setting);
         return EIO;
     }
     set_freq = freq_setUncoreFreqMax(fp, *setting);
-    if (set_freq == 0)
+    if (set_freq != 0)
     {
         LIBFREQGEN_SET_ERROR("could not set max uncore frequency %d, I/O-Error", *setting);
         return EIO;

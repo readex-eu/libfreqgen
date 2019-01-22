@@ -32,6 +32,8 @@ if (LIKWID_FOUND)
     SET(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DUSELIKWID" )
 endif()
 
+SET(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -D_XOPEN_SOURCE=500" )
+
 include_directories(include)
 add_library(freqgen SHARED ${SOURCES})
 set_target_properties(freqgen PROPERTIES PUBLIC_HEADER "include/freq_gen.h;include/freqgen.h")
